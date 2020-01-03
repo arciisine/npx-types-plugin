@@ -1,0 +1,50 @@
+{
+  "name": "@arcsine/npx-types-plugin",
+  "displayName": "npx types support",
+  "description": "Support for referencing types via npx shebang",
+  "version": "0.0.0",
+  "homepage": "",
+  "keywords": [
+    "vscode",
+    "scripts",
+    "npx",
+    "shebang"
+  ],
+  "publisher": "arcsine",
+  "author": {
+    "email": "timothy.soehnlin@gmail.com",
+    "name": "Timothy Soehnlin"
+  },
+  "repository": {
+    "url": "https://github.com/arciisine/npx-types-plugin.git"
+  },
+  "engines": {
+    "vscode": "^1.33.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "main": "./out/extension",
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "postinstall": "node ./node_modules/vscode/bin/install",
+    "test": "npm run compile && node ./node_modules/vscode/bin/test"
+  },
+  "files": [
+    "src/"
+  ],
+  "activationEvents": [
+    "onLanguage:javascript"
+  ],
+  "devDependencies": {
+    "@types/node": "^11.13.2",
+    "vscode": "^1.1.33"
+  },
+  "icon": "images/logo.png",
+  "galleryBanner": {
+    "color": "#c6cdd3",
+    "theme": "light"
+  }
+}
