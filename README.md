@@ -7,7 +7,7 @@ The [`plugin`](https://marketplace.visualstudio.com/items?itemName=arcsine.npx-t
 
 ## How it Works
 
-During editing, the plugin will download the library referenced in the shebang and add a line to the script to point to load the typings. 
+During editing, the plugin will download the library referenced in the shebang and add a line to the script to point to load the types. 
 
 ![Usage](https://github.com/arciisine/vscode-npx-types/raw/master/images/usage.gif)
 
@@ -20,25 +20,25 @@ During editing, the plugin will download the library referenced in the shebang a
 #!/usr/bin/npx @arcsine/nodesh
 ```
 
-### Step 2, Start Auto-Install Typings
-**Begin Typings Installation**
+### Step 2, Start Auto-Install Types
+**Begin Installation of Types**
 ```javascript
 #!/usr/bin/npx @arcsine/nodesh
-// NPX-TYPINGS
+// Installing @npx-types
 ```
 
-### Step 3, Load Installed Typings
+### Step 3, Load Installed Types
 **Typings successfully referenced**
 ```javascript
 #!/usr/bin/npx @arcsine/nodesh
-/** @typedef {import('/tmp/npx-typings-hPdAFW/node_modules/@arcsine/nodesh')} */ // NPX-TYPINGS
+/** @typedef {import('/tmp/npx-types-hPdAFW/node_modules/@arcsine/nodesh')} */ /* @npx-types */ // @ts-check
 ```
 
-### Step 4, Use Typings
-**Starting to Use new Typings**
+### Step 4, Use Typing Information
+**Starting to Use new typings**
 ```javascript
 #!/usr/bin/npx @arcsine/nodesh
-/** @typedef {import('/tmp/npx-typings-hPdAFW/node_modules/@arcsine/nodesh')} */ // NPX-TYPINGS
+/** @typedef {import('/tmp/npx-types-hPdAFW/node_modules/@arcsine/nodesh')} */ /* @npx-types */ // @ts-check
 
 [1, 2, 3]
   .$collect(2)
@@ -51,6 +51,6 @@ Given that the plugin has to reference local scripts, there is some specific wor
 
 ## Release Notes
 
-### 0.0.0
+### 0.0.3
 
 * Initial Release

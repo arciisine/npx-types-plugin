@@ -7,7 +7,7 @@ import * as path from 'path';
 
 export class Util {
 
-  static lineId = '@npx-typings';
+  static lineId = '@npx-types';
 
   static temp = fs.mkdtemp(path.join(os.tmpdir(), `${Util.lineId.substring(1)}-`));
   static exec = util.promisify(cp.exec);
