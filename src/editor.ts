@@ -45,7 +45,7 @@ export class NpxEditor {
     }
 
     console.log('[NOT-FOUND]', `Previous install is`, installed ? `pointing to a missing directory (${installed})` : 'not detected');
-    await Util.updateTypingsLine(editor, `// Installing ${Util.lineId}`, installed ? 'replace' : 'insert'); // Clear out line
+    await Util.updateTypingsLine(editor, `/* ${Util.lineId} */ // Installing`, installed ? 'replace' : 'insert'); // Clear out line
   }
 
 
@@ -63,7 +63,7 @@ export class NpxEditor {
     try {
       const installed = await Util.installDep(moduleName);
       console.log('[SUCCESS]', `${moduleName} successfully available at ${installed}`);
-      await Util.updateTypingsLine(editor, `/** @typedef {import('${installed}')} */ /* ${Util.lineId} */ // @ts-check`, 'replace');
+      await Util.updateTypingsLine(editor, `/* ${Util.lineId} */ /** @typedef {import('${installed}')} */ // @ts-check`, 'replace');
       NpxEditor.cache.add(`${moduleName}||${installed}`);
     } catch (err) {
       console.log(err);

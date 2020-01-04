@@ -2,7 +2,7 @@
   "name": "npx-types",
   "displayName": "Npx-Types",
   "description": "Support for referencing types via npx shebang",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "homepage": "https://github.com/arciisine/vscode-npx-types",
   "publisher": "arcsine",
   "keywords": [
@@ -11,7 +11,6 @@
     "npx",
     "shebang"
   ],
-  "publisher": "arcsine",
   "author": {
     "email": "timothy.soehnlin@gmail.com",
     "name": "Timothy Soehnlin"

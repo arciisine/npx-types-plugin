@@ -24,21 +24,21 @@ During editing, the plugin will download the library referenced in the shebang a
 **Begin Installation of Types**
 ```javascript
 #!/usr/bin/npx @arcsine/nodesh
-// Installing @npx-types
+/* @npx-types */ // Installing
 ```
 
 ### Step 3, Load Installed Types
 **Typings successfully referenced**
 ```javascript
 #!/usr/bin/npx @arcsine/nodesh
-/** @typedef {import('/tmp/npx-types-hPdAFW/node_modules/@arcsine/nodesh')} */ /* @npx-types */ // @ts-check
+/* @npx-types */ /** @typedef {import('/tmp/npx-types-hPdAFW/node_modules/@arcsine/nodesh')} */ // @ts-check
 ```
 
 ### Step 4, Use Typing Information
 **Starting to Use new typings**
 ```javascript
 #!/usr/bin/npx @arcsine/nodesh
-/** @typedef {import('/tmp/npx-types-hPdAFW/node_modules/@arcsine/nodesh')} */ /* @npx-types */ // @ts-check
+/* @npx-types */ /** @typedef {import('/tmp/npx-types-hPdAFW/node_modules/@arcsine/nodesh')} */ // @ts-check
 
 [1, 2, 3]
   .$collect(2)

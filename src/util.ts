@@ -66,7 +66,7 @@ export class Util {
     if (line === 0) {
       return undefined;
     }
-    return Util.extractMatch(new RegExp(`^.*@typedef.*import[(]['"]([^'"]+).*${Util.lineId}`), 1, editor);
+    return Util.extractMatch(new RegExp(`^/[*] ${Util.lineId} [*]/.*@typedef.*import[(]['"]([^'"]+)`), 1, editor);
   }
 
   /**
