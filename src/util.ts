@@ -7,7 +7,9 @@ import * as path from 'path';
 
 export class Util {
 
-  static temp = fs.mkdtemp(path.join(os.tmpdir(), 'npx-typings-'));
+  static lineId = '@npx-typings';
+
+  static temp = fs.mkdtemp(path.join(os.tmpdir(), `${Util.lineId.substring(1)}-`));
   static exec = util.promisify(cp.exec);
   static running: Promise<any> | undefined = undefined;
 
@@ -37,12 +39,17 @@ export class Util {
   /**
    * Return match by group number from regex
    */
-  static extractMatch(regex: RegExp, group: number = 1, line: string | vscode.TextLine = '') {
-    const text = typeof line === 'string' ? line : line.text;
+  static extractMatch(regex: RegExp, group: number = 1, editor: vscode.TextEditor) {
+    const line = Util.findLine(regex, editor);
+    if (line === undefined) {
+      return;
+    }
+
+    const { text } = editor.document.lineAt(line);
     let out = undefined;
-    text.replace(regex, (all, ...rest) => {
-      return out = rest[group - 1];
-    });
+    text.replace(regex, (all, ...rest) =>
+      out = rest[group - 1]
+    );
     return out;
   }
 
@@ -54,7 +61,30 @@ export class Util {
   /**
    * Read path from npx loaded typings
    */
-  static extractInstalledPath = Util.extractMatch.bind(null, /^.*@typedef.*import[(]['"]([^'"]+).*\/\/ NPX-TYPINGS$/, 1);
+  static extractInstalledPath(editor: vscode.TextEditor) {
+    const line = Util.findTypingsLine(editor);
+    if (line === 0) {
+      return undefined;
+    }
+    return Util.extractMatch(new RegExp(`^.*@typedef.*import[(]['"]([^'"]+).*${Util.lineId}`), 1, editor);
+  }
+
+  /**
+   * Find first line with pattern
+   */
+  static findLine(pat: RegExp, editor: vscode.TextEditor) {
+    const doc = editor.document;
+    for (let line = 0; line < doc.lineCount; line += 1) {
+      if (pat.test(doc.lineAt(line).text)) {
+        return line;
+      }
+    }
+  }
+
+  /**
+   * Find line for typings
+   */
+  static findTypingsLine = Util.findLine.bind(Util, new RegExp(Util.lineId));
 
   /**
    * Determines if module is installed locally
@@ -72,14 +102,19 @@ export class Util {
    * Install dependency
    */
   static async installDep(moduleName: string) {
-
     const cwd = await Util.temp;
-    const cmd = `npm i --no-save ${moduleName}`;
+    const target = `${cwd}/node_modules/${moduleName}`;
 
-    console.log('[INSTALL]', cmd);
-
-    await Util.exec(cmd, { cwd });
-    return `${cwd}/node_modules/${moduleName}`;
+    // See if already installed
+    try {
+      await fs.stat(target);
+    } catch {
+      // Not there, now install
+      const cmd = `npm i --no-save ${moduleName}`;
+      console.log('[INSTALL]', cmd);
+      await Util.exec(cmd, { cwd });
+    }
+    return target;
   }
 
 
@@ -95,7 +130,9 @@ export class Util {
         console.log('[FOUND]', `Previous install ${installedAt} points to proper module`);
         return true;
       }
-    } catch { }
+    } catch {
+      // Didn't stat, or couldn't resolve, or couldn't require
+    }
 
     return false;
   }
@@ -120,6 +157,10 @@ export class Util {
     return await editor.edit((edit) => {
       edit[mode](pos, text);
     });
+  }
+
+  static async updateTypingsLine(editor: vscode.TextEditor, text: string, mode: 'insert' | 'replace') {
+    return this.updateLine(editor, text, Util.findTypingsLine(editor) ?? 1, mode);
   }
 
   /**
