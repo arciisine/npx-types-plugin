@@ -1,9 +1,10 @@
 {
-  "name": "@arcsine/npx-types-plugin",
+  "name": "npx-types",
   "displayName": "npx types support",
   "description": "Support for referencing types via npx shebang",
   "version": "0.0.0",
-  "homepage": "",
+  "homepage": "https://github.com/arciisine/vscode-npx-types",
+  "publisher": "arcsine",
   "keywords": [
     "vscode",
     "scripts",
@@ -16,7 +17,7 @@
     "name": "Timothy Soehnlin"
   },
   "repository": {
-    "url": "https://github.com/arciisine/npx-types-plugin.git"
+    "url": "https://github.com/arciisine/vscode-npx-types.git"
   },
   "engines": {
     "vscode": "^1.33.0"
