@@ -1,72 +1,78 @@
 import * as vscode from 'vscode';
-import { Util } from './util';
+import { ModuleUtil } from './module';
+import { Mod, ID } from './types';
+import { TextUtil } from './text';
 
-export class NpxEditor {
+export class EditorUtil {
 
-  private static cache = new Set<string>();
+  static TYPEDEF_SIMPLE = new RegExp(ID);
+  static TYPEDEF_EXTRACT = new RegExp(`^/[*] ${ID} [*]/.*@typedef.*import[(]['"]([^'"]+)`);
+  static SHEBANG_EXTRACT = /^#!.*npx\s+((?:@|\w)\w*(?:[/]\w+)?(?:@\S+)?)/;
 
   /**
-   * Verify editor is valid
+   * Get the whole shebang
    */
-  static verifyEditor(editor?: vscode.TextEditor): editor is vscode.TextEditor {
-    if (!editor) {
-      return false;
-    }
+  static extractShebang(editor: vscode.TextEditor) {
+    return TextUtil.findLine(editor, /#!/)?.text;
+  }
 
-    if (editor.document.languageId !== 'javascript') { // Only apply to JS files
-      return false; // Not javascript
-    }
+  /**
+   * Read path from npx loaded typings
+   */
+  static extractTypedefImportPath(editor: vscode.TextEditor) {
+    return TextUtil.extractMatch(editor, this.TYPEDEF_EXTRACT, 1);
+  }
 
-    if (!Util.extractModule(editor)) { // If missing shebang skip
-      return false;
-    }
+  /**
+ * Match on module name in shebang
+ */
+  static extractModuleFromShebang(editor: vscode.TextEditor): Mod | undefined {
+    const match = TextUtil.extractMatch(editor, this.SHEBANG_EXTRACT, 1);
+    return match ? new Mod(match) : undefined;
+  }
 
-    return true;
+  static updateLine(editor: vscode.TextEditor, line: string) {
+    return TextUtil.updateLine(editor, line, this.TYPEDEF_SIMPLE, 1);
   }
 
   /**
    * Verify existing types
    */
-  static async verifyExistingTypings(editor: vscode.TextEditor) {
+  static async hasValidTypedef(editor: vscode.TextEditor, mod: Mod) {
+    const installed = this.extractTypedefImportPath(editor);
+    const valid = await ModuleUtil.validateInstallation(mod, installed);
 
-    const moduleName = Util.extractModule(editor)!;
-    const installed = Util.extractInstalledPath(editor);
-
-    if (installed) {
-      if (NpxEditor.cache.has(`${moduleName}||${installed}`)) {
-        console.log('[FOUND]', `Previous install is cached (${installed})`);
-        return true; // Already seen
-      }
-
-      if (await Util.isValidInstall(moduleName, installed)) {
-        console.log('[FOUND]', `Previous install is pointing to a valid directory (${installed})`);
-        return true; // Success
-      }
+    if (installed && !!valid) {
+      console.log('[FOUND]', `Previous install is pointing to a valid directory (${installed})`);
+      return true; // Success
     }
 
     console.log('[NOT-FOUND]', `Previous install is`, installed ? `pointing to a missing directory (${installed})` : 'not detected');
-    await Util.updateTypingsLine(editor, `/* ${Util.lineId} */ // Installing`, installed ? 'replace' : 'insert'); // Clear out line
+    await this.updateLine(editor, `/* ${ID} */ // Installing`); // Clear out line
   }
 
+  /**
+   * Ensure typedef is in file
+   */
+  static async ensureTypeDef(editor: vscode.TextEditor, loc: string) {
+    const installed = this.extractTypedefImportPath(editor);
+
+    if (!installed) {
+      await this.updateLine(editor, `/* ${ID} */ /** @typedef {import('${loc}')} */ // @ts-check`);
+    }
+  }
 
   /**
    * Install module, and set typings
    */
-  static async installModule(editor: vscode.TextEditor) {
-    const moduleName = Util.extractModule(editor)!;
-
-    if (await Util.isLocal(moduleName)) {
-      console.log('[FOUND]', `${moduleName} already available locally`);
-      return;
-    }
-
+  static async installModule(editor: vscode.TextEditor, mod: Mod) {
     try {
-      const installed = await Util.installDep(moduleName);
-      console.log('[SUCCESS]', `${moduleName} successfully available at ${installed}`);
-      await Util.updateTypingsLine(editor, `/* ${Util.lineId} */ /** @typedef {import('${installed}')} */ // @ts-check`, 'replace');
-      NpxEditor.cache.add(`${moduleName}||${installed}`);
+      const installed = await ModuleUtil.install(mod);
+      await this.ensureTypeDef(editor, installed);
+      console.log('[SUCCESS]', `${mod.full} successfully available at ${installed}`);
     } catch (err) {
-      console.log(err);
+      console.log('[ERROR]', err);
+      await this.updateLine(editor, `/* ${ID} */ // Installation failed: ${err.message}`);
     }
   }
 
@@ -74,15 +80,19 @@ export class NpxEditor {
    * Process an editor, install typings if needed
    */
   static async processEditor(editor?: vscode.TextEditor) {
-
-    if (!NpxEditor.verifyEditor(editor)) {
-      return;
+    if (editor && editor.document.languageId === 'javascript') {
+      const mod = this.extractModuleFromShebang(editor);
+      if (mod) {
+        const prev = ModuleUtil.getInstalledPath(mod);
+        if (prev) {
+          console.log('[FOUND]', `Previous install is cached ${prev}`);
+          await this.ensureTypeDef(editor, prev);
+          return
+        }
+        if (!await this.hasValidTypedef(editor, mod)) {
+          await this.installModule(editor, mod);
+        }
+      }
     }
-
-    if (await NpxEditor.verifyExistingTypings(editor)) {
-      return;
-    }
-
-    await NpxEditor.installModule(editor);
   }
 }

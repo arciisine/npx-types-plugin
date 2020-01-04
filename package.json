@@ -38,6 +38,16 @@
   "activationEvents": [
     "onLanguage:javascript"
   ],
+  "contributes": {
+    "commands": [
+      {
+        "title": "Run script",
+        "category": "Npx-Types",
+        "command": "npx-types.run",
+        "when": "editorLangId == javascript"
+      }
+    ]
+  },
   "devDependencies": {
     "@types/node": "^11.13.2",
     "vscode": "^1.1.33"

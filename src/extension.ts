@@ -1,10 +1,13 @@
 import * as vscode from 'vscode';
 
+import { ModuleUtil } from './module';
+import { EditorUtil } from './editor';
 import { Util } from './util';
-import { NpxEditor } from './editor';
+import { TerminalUtil } from './terminal';
+
 
 export function activate(context: vscode.ExtensionContext) {
-  const processEditor = Util.serialExecution(NpxEditor.processEditor);
+  const processEditor = Util.debounce(EditorUtil.processEditor.bind(EditorUtil), 500);
 
   // On edit
   vscode.window.onDidChangeVisibleTextEditors(all =>
@@ -20,8 +23,15 @@ export function activate(context: vscode.ExtensionContext) {
 
   // All on load
   setTimeout(() => vscode.window.visibleTextEditors.map(processEditor), 1000);
+
+  // Register run command
+  vscode.commands.registerCommand('npx-types.run', () => {
+    if (vscode.window.activeTextEditor) {
+      TerminalUtil.runScript(vscode.window.activeTextEditor);
+    }
+  });
 }
 
 export function deactivate() {
-  Util.cleanup();
+  ModuleUtil.cleanup();
 }
