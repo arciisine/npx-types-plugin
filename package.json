@@ -1,8 +1,8 @@
 {
   "name": "npx-scripts",
-  "displayName": "Npx-Scripts",
+  "displayName": "npx scripts",
   "description": "General support for npx scripts, with typings via npx shebang and execution",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "homepage": "https://github.com/arciisine/vscode-npx-scripts",
   "publisher": "arcsine",
   "keywords": [
@@ -41,9 +41,9 @@
   "contributes": {
     "commands": [
       {
-        "title": "Run script",
-        "category": "Npx-Scripts",
-        "command": "npx-types.run",
+        "title": "Run npx script",
+        "category": "npx",
+        "command": "npx-scripts.run",
         "when": "editorLangId == javascript"
       }
     ]

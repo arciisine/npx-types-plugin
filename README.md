@@ -58,12 +58,15 @@ Given the context of executable scripts, you can run the script manually without
 
 ## Release Notes
 
+### 0.1.2
+* Updated general documentation
+
 ### 0.1.0
 * Migrated naming from `npx-types` to `npx-scripts` to better reflect the scope of the plugin.
 
 ### 0.0.5
 * Support for library versions as specified in npx command
-* Allow for running scripts via command `Npx-scripts: Run script`
+* Allow for running scripts via command `npx: Run npx script`
 
 ### 0.0.3
 
