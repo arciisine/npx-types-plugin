@@ -59,6 +59,10 @@ Given that the plugin has to reference local scripts, there is some specific wor
 
 ## Release Notes
 
+### 0.0.5
+* Support for library versions as specified in npx command
+* Allow for running scripts via command `Npx-Types: Run script`
+
 ### 0.0.3
 
 * Initial Release
