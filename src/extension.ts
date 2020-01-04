@@ -25,7 +25,7 @@ export function activate(context: vscode.ExtensionContext) {
   setTimeout(() => vscode.window.visibleTextEditors.map(processEditor), 1000);
 
   // Register run command
-  vscode.commands.registerCommand('npx-types.run', () => {
+  vscode.commands.registerCommand('npx-scripts.run', () => {
     if (vscode.window.activeTextEditor) {
       TerminalUtil.runScript(vscode.window.activeTextEditor);
     }

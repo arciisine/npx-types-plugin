@@ -1,9 +1,9 @@
 {
-  "name": "npx-types",
-  "displayName": "Npx-Types",
-  "description": "Support for referencing types via npx shebang",
-  "version": "0.0.5",
-  "homepage": "https://github.com/arciisine/vscode-npx-types",
+  "name": "npx-scripts",
+  "displayName": "Npx-Scripts",
+  "description": "General support for npx scripts, with typings via npx shebang and execution",
+  "version": "0.1.0",
+  "homepage": "https://github.com/arciisine/vscode-npx-scripts",
   "publisher": "arcsine",
   "keywords": [
     "vscode",
@@ -16,7 +16,7 @@
     "name": "Timothy Soehnlin"
   },
   "repository": {
-    "url": "https://github.com/arciisine/vscode-npx-types.git"
+    "url": "https://github.com/arciisine/vscode-npx-scripts.git"
   },
   "engines": {
     "vscode": "^1.33.0"
@@ -42,7 +42,7 @@
     "commands": [
       {
         "title": "Run script",
-        "category": "Npx-Types",
+        "category": "Npx-Scripts",
         "command": "npx-types.run",
         "when": "editorLangId == javascript"
       }

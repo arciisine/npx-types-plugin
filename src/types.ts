@@ -13,4 +13,4 @@ export class Mod {
   }
 }
 
-export const ID = '@npx-types';
+export const ID = '@npx-scripts';
