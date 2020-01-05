@@ -49,7 +49,7 @@ During editing, the plugin will download the library referenced in the shebang a
 The extension will honor any module with a version specified `#!/usr/bin/npx @arcsine/nodesh@1.1.5`.  Multiple versions can be installed side-by-side without issue and the extension will manage them appropriately.
 
 ### Portability
-Given that the plugin has to reference local scripts, there is some specific work that has to be done to allow for authoring on different machines.  The plugin will check the path reference by the `@typedef`, and if it is not found on the machine it will update it, with a fresh install. 
+By default, the plugin will remove the typedef on close.  If a file is loaded that happens to have a typedef, the plugin will check the path reference by the `@typedef`, and if it is not found on the machine it will update it, with a fresh install. 
 
 ## Running Scripts
 Given the context of executable scripts, you can run the script manually without problem. Additionally, the plugin provides the ability to execute the script with the loaded module, which will display in a vscode terminal.  One of the primary benefits here, is that npx will not be invoked, and so installation will be skipped.  This provides a speed boost across multiple executions.
@@ -57,6 +57,9 @@ Given the context of executable scripts, you can run the script manually without
 ![Running](https://github.com/arciisine/vscode-npx-scripts/raw/master/images/run.gif)
 
 ## Release Notes
+
+### 0.1.5
+* Support cleaning up files on close, leaving files as found
 
 ### 0.1.3
 * Updated general documentation
