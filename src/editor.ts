@@ -79,20 +79,15 @@ export class EditorUtil {
   /**
    * Process an editor, install typings if needed
    */
-  static async processEditor(editor?: vscode.TextEditor) {
-    if (editor && editor.document.languageId === 'javascript') {
-      const mod = this.extractModuleFromShebang(editor);
-      if (mod) {
-        const prev = ModuleUtil.getInstalledPath(mod);
-        if (prev) {
-          console.log('[FOUND]', `Previous install is cached ${prev}`);
-          await this.ensureTypeDef(editor, prev);
-          return
-        }
-        if (!await this.hasValidTypedef(editor, mod)) {
-          await this.installModule(editor, mod);
-        }
-      }
+  static async processEditor(editor: vscode.TextEditor, mod: Mod) {
+    const prev = ModuleUtil.getInstalledPath(mod);
+    if (prev) {
+      console.log('[FOUND]', `Previous install is cached ${prev}`);
+      await this.ensureTypeDef(editor, prev);
+      return
+    }
+    if (!await this.hasValidTypedef(editor, mod)) {
+      await this.installModule(editor, mod);
     }
   }
 }
