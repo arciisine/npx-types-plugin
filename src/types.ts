@@ -11,6 +11,10 @@ export class Mod {
       this.name = full;
     }
   }
+
+  get safe() {
+    return this.full.replace(/[@/]/g, '.').replace(/(^[.]+)|([.]+$)/, '').replace(/[.][.]+/, '.');
+  }
 }
 
 export const ID = '@npx-scripts';

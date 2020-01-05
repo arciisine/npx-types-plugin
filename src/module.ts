@@ -7,31 +7,7 @@ import { Util } from './util';
 
 export class ModuleUtil {
 
-  static temp = fs.mkdtemp(path.join(os.tmpdir(), `${ID.substring(1)}-`));
-  static running: Promise<any> | undefined = undefined;
-  private static installCache = new Map<string, string>();
-
-  static hasSeen(mod: Mod) {
-    return this.installCache.has(mod.full);
-  }
-
-  static getInstalledPath(mod: Mod) {
-    return this.installCache.get(mod.full)!;
-  }
-
-  /**
-   * Convert module name/path to a proper file location (with the proper name)
-   */
-  static async resolveLocation(mod: Mod, pth: string = mod.name): Promise<string | undefined> {
-    try {
-      const fullPath = require.resolve(pth); // Get location
-      const folder = `${fullPath.substring(0, fullPath.lastIndexOf('/node_modules'))}/node_modules/${mod.name}`;
-      if (await Util.exists(folder)) {
-        return folder;
-      }
-    } catch { }
-  }
-
+  static cacheDir = Util.mkdir(path.join(os.tmpdir(), `${ID.substring(1)}`));
 
   /**
    * Verify that the found module matches the appropriate info
@@ -67,22 +43,19 @@ export class ModuleUtil {
    * Install dependency
    */
   static async install(mod: Mod) {
-    const cwd = path.join(await this.temp, mod.full.replace(/[@/]/g, '_'));
     const local = await this.validateInstallation(mod);
-    const target = local ?? `${cwd}/node_modules/${mod.name}`;
-
-    if (!local) {
-      await fs.mkdir(cwd).catch(() => { });
-    }
-
-    this.installCache.set(mod.full, target);
+    const target = local ?? path.join(await this.cacheDir, mod.safe);;
 
     if (!await Util.exists(target)) {
+      const cwd = await fs.mkdtemp(path.join(os.tmpdir(), 'z-'));
+
       // Not there, now install
       const cmd = `npm i --no-save ${mod.full}`;
       console.log('[INSTALL]', cmd);
       try {
         await Util.exec(cmd, { cwd });
+        await fs.rename(`${cwd}/node_modules/${mod.name}`, target);
+        await fs.rename(`${cwd}/node_modules`, `${target}/node_modules`);
       } catch (err) {
         console.log('[FAILED]', err);
         throw this.cleanInstallError(mod, err);
@@ -96,14 +69,20 @@ export class ModuleUtil {
    * Validate installation at path, for specific module
    */
   static async validateInstallation(mod: Mod, installedAt?: string) {
-    const loc = await this.resolveLocation(mod, installedAt);
+    try {
+      const key: 'name' | 'safe' = installedAt && installedAt.includes('node_modules') ? 'name' : 'safe';
+      const fullPath = require.resolve(installedAt ?? mod.name); // Get location
+      const folder = `${fullPath.split(mod[key])[0]}${mod[key]}`;
 
-    if (loc && await this.verifyInfo(mod, loc)) {
-      console.log('[FOUND]', `Previous valid install ${installedAt} exists`);
-      return loc;
-    }
-
-    return;
+      if (
+        fullPath.includes(mod[key]) &&
+        await Util.exists(folder) &&
+        await this.verifyInfo(mod, folder)
+      ) {
+        console.log('[FOUND]', `Previous valid install ${installedAt} exists`);
+        return folder;
+      }
+    } catch { }
   }
 
   /**
@@ -121,13 +100,5 @@ export class ModuleUtil {
       }
     }
     return shebang.split(/#!/)[1]; // Strip prefix
-  }
-
-
-  /**
-   * Cleanup folder
-   */
-  static async cleanup() {
-    return Util.rmdir(await this.temp);
   }
 }

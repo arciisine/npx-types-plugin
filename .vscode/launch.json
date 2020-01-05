@@ -16,7 +16,14 @@
       "outFiles": [
         "${workspaceRoot}/out/src/**/*.js"
       ],
-      "preLaunchTask": "npm"
+      "preLaunchTask": "npm",
+      "skipFiles": [
+        "<node_internals>/**/*",
+        "**/node_modules/async_hooks/**/*",
+        "**/node_modules/cls-hooked/**/*",
+        "**/node_modules/trace/**/*",
+        "**/node_modules/stack-chain/**/*"
+      ]
     }
   ]
 }

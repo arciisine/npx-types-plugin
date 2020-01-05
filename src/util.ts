@@ -11,6 +11,8 @@ export class Util {
    */
   static exists = (pth: string) => fs.stat(pth).then(x => true, x => false);
 
+  static mkdir = (pth: string) => fs.mkdir(pth).then(x => pth, x => pth);
+
   static exec = util.promisify(cp.exec);
 
   static manualProm(): ManualProm {
@@ -21,21 +23,6 @@ export class Util {
       })
     });
     return p as ManualProm;
-  }
-
-  /**
-   * Cleanup folder
-   */
-  static async rmdir(pth: string) {
-    if (!pth || pth === '/') {
-      console.error('Path has not been defined');
-      return;
-    }
-    const cmd = process.platform === 'win32' ?
-      `rmdir /Q /S ${pth}` :
-      `rm -rf ${pth}`;
-
-    await this.exec(cmd);
   }
 
   /**
@@ -58,21 +45,29 @@ export class Util {
   static debounce(fn: (...args: any[]) => Promise<any>, delay = 1000) {
     let timer: NodeJS.Timeout;
     let prom: ManualProm | undefined;
+    let running = false;
 
     return async (...args: any[]) => {
       if (prom === undefined) {
         prom = this.manualProm();
+        running = false;
       }
 
-      if (timer) {
-        clearTimeout(timer);
-      }
+      if (!running) { // If not already in motion
+        if (timer) { // Stop pending
+          clearTimeout(timer);
+        }
 
-      timer = setTimeout(() => {
-        fn(...args)
-          .then(prom!.resolve, prom!.reject)
-          .finally(prom = undefined);
-      }, delay);
+        timer = setTimeout(() => { // Extend timeout
+          running = true;
+          fn(...args)
+            .then(prom!.resolve, prom!.reject)
+            .finally(() => {
+              prom = undefined;
+              running = false;
+            });
+        }, delay);
+      }
 
       return prom!;
     };

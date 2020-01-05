@@ -1,6 +1,5 @@
 import * as vscode from 'vscode';
 
-import { ModuleUtil } from './module';
 import { EditorUtil } from './editor';
 import { Util } from './util';
 import { TerminalUtil } from './terminal';
@@ -36,12 +35,13 @@ class Extension {
    */
   static async onEditorChange(editor: vscode.TextEditor) {
     const doc = editor.document;
-    if (doc.languageId === 'javascript') {
-      const mod = EditorUtil.extractModuleFromShebang(editor);
-      if (mod) {
-        this.seen.set(doc.fileName, doc);
-        await EditorUtil.processEditor(editor, mod);
-      }
+    if (
+      !doc.isClosed &&
+      doc.languageId === 'javascript' &&
+      !!EditorUtil.extractModuleFromShebang(editor)
+    ) {
+      this.seen.set(doc.fileName, doc);
+      await EditorUtil.processEditor(editor);
     }
   }
 
@@ -59,7 +59,8 @@ class Extension {
    */
   static onCloseDocument(doc: vscode.TextDocument) {
     if (this.seen.has(doc.fileName)) {
-      return EditorUtil.removeTypedef(doc);
+      // return EditorUtil.removeTypedef(doc);
+      // Nothing for now
     }
   }
 
@@ -84,7 +85,6 @@ class Extension {
   }
 
   static async deactivate() {
-    await ModuleUtil.cleanup();
     for (const doc of this.seen.values()) {
       await this.onCloseDocument(doc);
     }

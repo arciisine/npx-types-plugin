@@ -10,6 +10,8 @@ export class EditorUtil {
   static TYPEDEF_EXTRACT = new RegExp(`^/[*] ${ID} [*]/.*@typedef.*import[(]['"]([^'"]+)`);
   static SHEBANG_EXTRACT = /^#!.*npx\s+((?:@|\w)\w*(?:[/]\w+)?(?:@\S+)?)/;
 
+  private static installCache = new Map<string, string | Error>();
+
   /**
    * Get the whole shebang
    */
@@ -33,62 +35,26 @@ export class EditorUtil {
   }
 
   static updateLine(editor: vscode.TextEditor, line: string) {
-    return TextUtil.updateLine(editor, line, this.TYPEDEF_SIMPLE, 1);
+    return TextUtil.updateLine(editor, `/* ${ID} */ ${line}`, this.TYPEDEF_SIMPLE, 1);
   }
 
   /**
-   * Verify existing types
+   * Ensure typedef is in file and is valid
    */
-  static async hasValidTypedef(editor: vscode.TextEditor, mod: Mod) {
-    const installed = this.extractTypedefImportPath(editor);
-    const valid = await ModuleUtil.validateInstallation(mod, installed);
-
-    if (installed && !!valid) {
-      console.log('[FOUND]', `Previous install is pointing to a valid directory (${installed})`);
-      return true; // Success
+  static async ensureTypedef(editor: vscode.TextEditor, mod: Mod, loc: string | Error | undefined) {
+    if (!loc) {
+      return;
     }
-
-    console.log('[NOT-FOUND]', `Previous install is`, installed ? `pointing to a missing directory (${installed})` : 'not detected');
-    await this.updateLine(editor, `/* ${ID} */ // Installing`); // Clear out line
-  }
-
-  /**
-   * Ensure typedef is in file
-   */
-  static async ensureTypedef(editor: vscode.TextEditor, loc: string) {
-    const installed = this.extractTypedefImportPath(editor);
-
-    if (!installed) {
-      await this.updateLine(editor, `/* ${ID} */ /** @typedef {import('${loc}')} */ // @ts-check`);
-    }
-  }
-
-  /**
-   * Install module, and set typings
-   */
-  static async installModule(editor: vscode.TextEditor, mod: Mod) {
-    try {
-      const installed = await ModuleUtil.install(mod);
-      await this.ensureTypedef(editor, installed);
-      console.log('[SUCCESS]', `${mod.full} successfully available at ${installed}`);
-    } catch (err) {
-      console.log('[ERROR]', err);
-      await this.updateLine(editor, `/* ${ID} */ // Installation failed: ${err.message}`);
-    }
-  }
-
-  /**
-   * Process an editor, install typings if needed
-   */
-  static async processEditor(editor: vscode.TextEditor, mod: Mod) {
-    const prev = ModuleUtil.getInstalledPath(mod);
-    if (prev) {
-      console.log('[FOUND]', `Previous install is cached ${prev}`);
-      await this.ensureTypedef(editor, prev);
-      return
-    }
-    if (!await this.hasValidTypedef(editor, mod)) {
-      await this.installModule(editor, mod);
+    if (typeof loc === 'string') {
+      if (await ModuleUtil.validateInstallation(mod, loc)) {
+        this.installCache.set(mod.full, loc);
+        await this.updateLine(editor, `/** @typedef {import('${loc}')} */ // @ts-check`);
+        return true;
+      }
+    } else {
+      this.installCache.set(mod.full, loc);
+      await this.updateLine(editor, `// Installation failed: ${loc.message}`);
+      return true;
     }
   }
 
@@ -97,5 +63,43 @@ export class EditorUtil {
    */
   static async removeTypedef(doc: vscode.TextDocument) {
     await Util.removeContent(doc.fileName, new RegExp(`/[*] ${ID} [*]/[^\n]*\n`, 'sg'));
+  }
+
+  /**
+   * Process an editor, install typings if needed
+   */
+  static async processEditor(editor: vscode.TextEditor) {
+    const mod = this.extractModuleFromShebang(editor)!;
+    const typedefPath = this.extractTypedefImportPath(editor);
+    const cachedTypedefPath = this.installCache.get(mod.full)!;
+
+    if (typedefPath && typedefPath === cachedTypedefPath) {
+      return; // If unchanged, return
+    }
+
+    // Use cached value if good 
+    if (await this.ensureTypedef(editor, mod, cachedTypedefPath)) {
+      console.log('[FOUND]', `Previous install is cached ${cachedTypedefPath}`);
+      return;
+    }
+    // Honor path if valid install
+    if (await this.ensureTypedef(editor, mod, typedefPath)) {
+      console.log('[FOUND]', `Previous install found ${typedefPath}`);
+      return;
+    }
+
+    console.log('[NOT-FOUND]', `Previous install is`,
+      typedefPath ? `pointing to a missing directory (${typedefPath})` : 'not detected');
+
+    try {
+      // Now installing
+      await this.updateLine(editor, `// Installing ...`);
+      const installed = await ModuleUtil.install(mod);
+      await this.ensureTypedef(editor, mod, installed);
+      console.log('[SUCCESS]', `${mod.full} successfully available at ${installed}`);
+    } catch (err) {
+      await this.ensureTypedef(editor, mod, err);
+      console.log('[ERROR]', err);
+    }
   }
 }

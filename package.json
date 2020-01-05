@@ -2,7 +2,7 @@
   "name": "npx-scripts",
   "displayName": "npx scripts",
   "description": "General support for npx scripts, with typings via npx shebang and execution",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "homepage": "https://github.com/arciisine/vscode-npx-scripts",
   "publisher": "arcsine",
   "keywords": [
