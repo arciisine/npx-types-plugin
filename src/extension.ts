@@ -57,8 +57,10 @@ class Extension {
   /**
    * Cleanup on close doc
    */
-  static async onCloseDocument(doc: vscode.TextDocument) {
-
+  static onCloseDocument(doc: vscode.TextDocument) {
+    if (this.seen.has(doc.fileName)) {
+      return EditorUtil.removeTypedef(doc);
+    }
   }
 
   /**
@@ -83,8 +85,8 @@ class Extension {
 
   static async deactivate() {
     await ModuleUtil.cleanup();
-    for (const [key, value] of this.seen) {
-      await this.onCloseDocument(value);
+    for (const doc of this.seen.values()) {
+      await this.onCloseDocument(doc);
     }
   }
 }

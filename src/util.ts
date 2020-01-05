@@ -39,6 +39,20 @@ export class Util {
   }
 
   /**
+   * Remove content from file
+   */
+  static async removeContent(file: string, regex: RegExp) {
+    if (await this.exists(file)) {
+      try {
+        const content = await fs.readFile(file, 'utf8');
+        if (regex.test(content)) { // Only update if pattern is found
+          await fs.writeFile(file, content.replace(regex, ''), 'utf8');
+        }
+      } catch { }
+    }
+  }
+
+  /**
    * Executes only latest invocation, with a required 1 seconds (default) of quiet
    */
   static debounce(fn: (...args: any[]) => Promise<any>, delay = 1000) {

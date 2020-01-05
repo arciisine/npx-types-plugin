@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { ModuleUtil } from './module';
 import { Mod, ID } from './types';
 import { TextUtil } from './text';
+import { Util } from './util';
 
 export class EditorUtil {
 
@@ -54,7 +55,7 @@ export class EditorUtil {
   /**
    * Ensure typedef is in file
    */
-  static async ensureTypeDef(editor: vscode.TextEditor, loc: string) {
+  static async ensureTypedef(editor: vscode.TextEditor, loc: string) {
     const installed = this.extractTypedefImportPath(editor);
 
     if (!installed) {
@@ -68,7 +69,7 @@ export class EditorUtil {
   static async installModule(editor: vscode.TextEditor, mod: Mod) {
     try {
       const installed = await ModuleUtil.install(mod);
-      await this.ensureTypeDef(editor, installed);
+      await this.ensureTypedef(editor, installed);
       console.log('[SUCCESS]', `${mod.full} successfully available at ${installed}`);
     } catch (err) {
       console.log('[ERROR]', err);
@@ -83,11 +84,18 @@ export class EditorUtil {
     const prev = ModuleUtil.getInstalledPath(mod);
     if (prev) {
       console.log('[FOUND]', `Previous install is cached ${prev}`);
-      await this.ensureTypeDef(editor, prev);
+      await this.ensureTypedef(editor, prev);
       return
     }
     if (!await this.hasValidTypedef(editor, mod)) {
       await this.installModule(editor, mod);
     }
+  }
+
+  /**
+   * Remove typedef
+   */
+  static async removeTypedef(doc: vscode.TextDocument) {
+    await Util.removeContent(doc.fileName, new RegExp(`/[*] ${ID} [*]/[^\n]*\n`, 'sg'));
   }
 }
