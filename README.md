@@ -1,6 +1,6 @@
 <h1>
   <sub><img src="https://github.com/arciisine/vscode-npx-scripts/raw/master/images/logo.png" height="40"></sub>
-  `npx scripts` VSCode Plugin
+  npx scripts VSCode Plugin
 </h1>
 
 The [`plugin`](https://marketplace.visualstudio.com/items?itemName=arcsine.npx-scripts) provides general support for authoring npx scripts (Javascript files that include an `npx` `shebang` (`#!/usr/bin/npx module`).  The support includes:
