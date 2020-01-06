@@ -25,19 +25,19 @@ During editing, the plugin will download the library referenced in the shebang a
 **Begin Installation of Types**
 ```javascript
 #!/usr/bin/npx @arcsine/nodesh
-/* @npx-scripts */ // Installing
+/* @npx-scripts */ // Installing ...
 ```
 
 **Typings successfully referenced**
 ```javascript
 #!/usr/bin/npx @arcsine/nodesh
-/* @npx-scripts */ /** @typedef {import('/tmp/npx-scripts-hPdAFW/node_modules/@arcsine/nodesh')} */ // @ts-check
+/* @npx-scripts */ /** @typedef {import('/tmp/npx-scripts/arcsine.nodesh')} */ // @ts-check
 ```
 
 **Starting to Use new typings**
 ```javascript
 #!/usr/bin/npx @arcsine/nodesh
-/* @npx-scripts */ /** @typedef {import('/tmp/npx-scripts-hPdAFW/node_modules/@arcsine/nodesh')} */ // @ts-check
+/* @npx-scripts */ /** @typedef {import('/tmp/npx-scripts/arcsine.nodesh')} */ // @ts-check
 
 [1, 2, 3]
   .$collect(2)
@@ -49,7 +49,7 @@ During editing, the plugin will download the library referenced in the shebang a
 The extension will honor any module with a version specified `#!/usr/bin/npx @arcsine/nodesh@1.1.5`.  Multiple versions can be installed side-by-side without issue and the extension will manage them appropriately.
 
 ### Portability
-If a file is loaded that happens to have a typedef, the plugin will check the path reference by the `@typedef`, and if it is not found on the machine it will update it, with a fresh install. 
+If a file is loaded that happens to have a typedef, the plugin will check the path reference by the `@typedef`, and if it is not found on the machine it will update it, with a fresh install. When closing a document within vscode, the `@typedef` will be stripped out.
 
 ## Running Scripts
 Given the context of executable scripts, you can run the script manually without problem. Additionally, the plugin provides the ability to execute the script with the loaded module, which will display in a vscode terminal.  One of the primary benefits here, is that npx will not be invoked, and so installation will be skipped.  This provides a speed boost across multiple executions.
@@ -58,9 +58,13 @@ Given the context of executable scripts, you can run the script manually without
 
 ## Release Notes
 
+### 0.1.7
+* Moved output from terminal to OutputChannel
+* Allow for full reinstall of managed modules
+* General refactor
+
 ### 0.1.6
 * General refactor
-* Removed save cleanup as it caused problems when diffing, made paths more portable to prevent need for removal.
 
 ### 0.1.5
 * Support cleaning up files on close, leaving files as found

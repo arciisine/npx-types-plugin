@@ -18,3 +18,7 @@ export class Mod {
 }
 
 export const ID = '@npx-scripts';
+export const ID_SAFE = ID.substring(1);
+export const ID_TAG = `/* ${ID} */`;
+export const ID_TAG_MATCH = new RegExp(`/[*] ${ID} [*]/`);
+export const ID_LINE_MATCH = new RegExp(`^${ID_TAG_MATCH.source} /.*?\n`, 'smg');

@@ -2,12 +2,12 @@ import { promises as fs } from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 
-import { ID, Mod } from './types';
+import { Mod, ID_SAFE } from './types';
 import { Util } from './util';
 
 export class ModuleUtil {
 
-  static cacheDir = Util.mkdir(path.join(os.tmpdir(), `${ID.substring(1)}`));
+  static cacheDir = Util.mkdir(path.join(os.tmpdir(), `${ID_SAFE}`));
 
   /**
    * Verify that the found module matches the appropriate info
@@ -42,26 +42,33 @@ export class ModuleUtil {
   /**
    * Install dependency
    */
-  static async install(mod: Mod) {
+  static async install(mod: Mod, force = false) {
     const local = await this.validateInstallation(mod);
-    const target = local ?? path.join(await this.cacheDir, mod.safe);;
+    const target = local ?? path.join(await this.cacheDir, mod.safe);
 
-    if (!await Util.exists(target)) {
-      const cwd = await fs.mkdtemp(path.join(os.tmpdir(), 'z-'));
-
-      // Not there, now install
-      const cmd = `npm i --no-save ${mod.full}`;
-      console.log('[INSTALL]', cmd);
-      try {
-        await Util.exec(cmd, { cwd });
-        await fs.rename(`${cwd}/node_modules/${mod.name}`, target);
-        await fs.rename(`${cwd}/node_modules`, `${target}/node_modules`);
-      } catch (err) {
-        console.log('[FAILED]', err);
-        throw this.cleanInstallError(mod, err);
+    // If target is already there
+    if (await Util.exists(target)) {
+      // Force only works on extension managed install
+      if (force && target.startsWith(await this.cacheDir)) {
+        await Util.rmdir(target); // Clear out on force
+      } else {
+        return target;
       }
     }
 
+    const cwd = await fs.mkdtemp(path.join(os.tmpdir(), 'z-'));
+
+    // Not there, now install
+    const cmd = `npm i --no-save ${mod.full}`;
+    console.log('[INSTALL]', cmd);
+    try {
+      await Util.exec(cmd, { cwd });
+      await fs.rename(`${cwd}/node_modules/${mod.name}`, target);
+      await fs.rename(`${cwd}/node_modules`, `${target}/node_modules`);
+    } catch (err) {
+      console.log('[FAILED]', err);
+      throw this.cleanInstallError(mod, err);
+    }
     return target;
   }
 

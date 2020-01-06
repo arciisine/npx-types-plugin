@@ -1,13 +1,12 @@
 import * as vscode from 'vscode';
 import { ModuleUtil } from './module';
-import { Mod, ID } from './types';
+import { Mod, ID_TAG, ID_TAG_MATCH, ID_LINE_MATCH } from './types';
 import { TextUtil } from './text';
-import { Util } from './util';
 
 export class EditorUtil {
 
-  static TYPEDEF_SIMPLE = new RegExp(ID);
-  static TYPEDEF_EXTRACT = new RegExp(`^/[*] ${ID} [*]/.*@typedef.*import[(]['"]([^'"]+)`);
+  static TYPEDEF_SIMPLE = ID_TAG_MATCH;
+  static TYPEDEF_EXTRACT = new RegExp(`^${ID_TAG_MATCH.source}.*@typedef.*import[(]['"]([^'"]+)`);
   static SHEBANG_EXTRACT = /^#!.*npx\s+((?:@|\w)\w*(?:[/]\w+)?(?:@\S+)?)/;
 
   private static installCache = new Map<string, string | Error>();
@@ -35,7 +34,7 @@ export class EditorUtil {
   }
 
   static updateLine(editor: vscode.TextEditor, line: string) {
-    return TextUtil.updateLine(editor, `/* ${ID} */ ${line}`, this.TYPEDEF_SIMPLE, 1);
+    return TextUtil.updateLine(editor, `${ID_TAG} ${line}`, this.TYPEDEF_SIMPLE, 1);
   }
 
   /**
@@ -62,14 +61,44 @@ export class EditorUtil {
    * Remove typedef
    */
   static async removeTypedef(doc: vscode.TextDocument) {
-    await Util.removeContent(doc.fileName, new RegExp(`/[*] ${ID} [*]/[^\n]*\n`, 'sg'));
+    if (this.SHEBANG_EXTRACT.test(doc.lineAt(0).text)) { // only with shebangs
+      await TextUtil.removeContent(doc, ID_LINE_MATCH);
+    }
+  }
+
+  /**
+   * Install module
+   */
+  static async installModule(editor: vscode.TextEditor, mod: Mod, force = false) {
+    try {
+      // Now installing
+      await this.updateLine(editor, `// Installing ...`);
+      const installed = await ModuleUtil.install(mod, force);
+      await this.ensureTypedef(editor, mod, installed);
+      console.log('[SUCCESS]', `${mod.full} successfully available at ${installed}`);
+    } catch (err) {
+      await this.ensureTypedef(editor, mod, err);
+      console.log('[ERROR]', err);
+    }
+  }
+
+  /**
+   * Re-download module
+   */
+  static async reinstallModule(editor: vscode.TextEditor) {
+    const mod = this.extractModuleFromShebang(editor)!;
+    await this.installModule(editor, mod, true);
   }
 
   /**
    * Process an editor, install typings if needed
    */
   static async processEditor(editor: vscode.TextEditor) {
-    const mod = this.extractModuleFromShebang(editor)!;
+    const mod = this.extractModuleFromShebang(editor);
+    if (!mod) {
+      return;
+    }
+
     const typedefPath = this.extractTypedefImportPath(editor);
     const cachedTypedefPath = this.installCache.get(mod.full)!;
 
@@ -91,15 +120,6 @@ export class EditorUtil {
     console.log('[NOT-FOUND]', `Previous install is`,
       typedefPath ? `pointing to a missing directory (${typedefPath})` : 'not detected');
 
-    try {
-      // Now installing
-      await this.updateLine(editor, `// Installing ...`);
-      const installed = await ModuleUtil.install(mod);
-      await this.ensureTypedef(editor, mod, installed);
-      console.log('[SUCCESS]', `${mod.full} successfully available at ${installed}`);
-    } catch (err) {
-      await this.ensureTypedef(editor, mod, err);
-      console.log('[ERROR]', err);
-    }
+    await this.installModule(editor, mod);
   }
 }

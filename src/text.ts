@@ -1,4 +1,6 @@
 import * as vscode from 'vscode';
+import { Util } from './util';
+import { promises as fs } from 'fs';
 
 export class TextUtil {
 
@@ -25,7 +27,7 @@ export class TextUtil {
     // Fill out space if adding data
     if (text && line >= editor.document.lineCount) {
       const last = editor.document.lineAt(editor.document.lineCount - 1);
-      await editor.edit(e => e.insert(last.range.end, '\n'.repeat((line + 1) - editor.document.lineCount)));
+      await editor.edit(e => e.insert(last.range.end, '\n'.repeat(line - editor.document.lineCount)));
     }
 
     const now = editor.document.lineAt(line);
@@ -65,5 +67,31 @@ export class TextUtil {
       out = rest[group - 1]
     );
     return out;
+  }
+
+  /**
+   * Append line to editor
+   * @param editor 
+   * @param lines 
+   */
+  static async append(editor: vscode.TextEditor, ...lines: string[]) {
+    await editor.edit((cmd) => {
+      const lastLine = editor.document.lineAt(editor.document.lineCount - 1);
+      cmd.insert(lastLine.range.end, `\n${lines.join('\n')}`);
+    });
+  }
+
+  /**
+   * Remove content from file
+   */
+  static async removeContent(doc: vscode.TextDocument, regex: RegExp) {
+    if (await Util.exists(doc.fileName)) {
+      try {
+        const content = doc.getText();
+        if (regex.test(content)) { // Only update if pattern is found
+          await fs.writeFile(doc.fileName, content.replace(regex, ''), 'utf8');
+        }
+      } catch { }
+    }
   }
 }
