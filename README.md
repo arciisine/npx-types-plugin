@@ -3,7 +3,7 @@
   npx scripts VSCode Plugin
 </h1>
 
-The [`plugin`](https://marketplace.visualstudio.com/items?itemName=arcsine.npx-scripts) provides general support for authoring npx scripts (Javascript files that include an `npx` `shebang` (`#!/usr/bin/npx module`).  The support includes:
+The [`plugin`](https://marketplace.visualstudio.com/items?itemName=arcsine.npx-scripts) provides general support for authoring npx scripts (Javascript files that include an `npx` in the `shebang` (e.g. `#!/usr/bin/env -S npx {module}`). The support includes:
 * Automatic type acquisition for easier authoring
 * Support for launching scripts within vscode (with performance enhancement)
 
@@ -19,25 +19,27 @@ During editing, the plugin will download the library referenced in the shebang a
 
 **Authoring a new npx-shebang script**
 ```javascript
-#!/usr/bin/npx @arcsine/nodesh
+#!/usr/bin/env -S npx @arcsine/nodesh
 ```
 
 **Begin Installation of Types**
 ```javascript
-#!/usr/bin/npx @arcsine/nodesh
-/* @npx-scripts */ // Installing ...
+#!/usr/bin/env -S npx @arcsine/nodesh
+/* @npx-scripts - installing ... */
 ```
 
 **Typings successfully referenced**
 ```javascript
-#!/usr/bin/npx @arcsine/nodesh
-/* @npx-scripts */ /** @typedef {import('/tmp/npx-scripts/arcsine.nodesh')} */ // @ts-check
+#!/usr/bin/env -S npx @arcsine/nodesh
+/* @npx-scripts - found */ // @ts-check
+/** @typedef {import('/tmp/npx-scripts/arcsine.nodesh')} npxscripts__simple_ */ 
 ```
 
 **Starting to Use new typings**
 ```javascript
-#!/usr/bin/npx @arcsine/nodesh
-/* @npx-scripts */ /** @typedef {import('/tmp/npx-scripts/arcsine.nodesh')} */ // @ts-check
+#!/usr/bin/env -S npx @arcsine/nodesh
+/* @npx-scripts - found*/ // @ts-check 
+/** @typedef {import('/tmp/npx-scripts/arcsine.nodesh')} npxscripts__simple_ */
 
 [1, 2, 3]
   .$collect(2)
@@ -46,7 +48,7 @@ During editing, the plugin will download the library referenced in the shebang a
 ```
 
 ### Version Support
-The extension will honor any module with a version specified `#!/usr/bin/npx @arcsine/nodesh@1.1.5`.  Multiple versions can be installed side-by-side without issue and the extension will manage them appropriately.
+The extension will honor any module with a version specified `#!/usr/bin/env -S npx @arcsine/nodesh@1.1.5`.  Multiple versions can be installed side-by-side without issue and the extension will manage them appropriately.
 
 ### Portability
 If a file is loaded that happens to have a typedef, the plugin will check the path reference by the `@typedef`, and if it is not found on the machine it will update it, with a fresh install. When closing a document within vscode, the `@typedef` will be stripped out.

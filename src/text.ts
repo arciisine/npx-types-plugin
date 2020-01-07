@@ -17,39 +17,38 @@ export class TextUtil {
     }
   }
 
+  static forCompare(line: string) {
+    return line.toLowerCase().replace(/\s+/g, '');
+  }
+
+  static async ensureLineAt(editor: vscode.TextEditor, line: number) {
+    // Fill out space if adding data
+    if (line >= editor.document.lineCount) {
+      const last = editor.document.lineAt(editor.document.lineCount - 1);
+      await editor.edit(e => e.insert(last.range.end, '\n'.repeat(line - editor.document.lineCount)));
+    }
+  }
+
   /**
    * Update line in an editor
    */
   static async updateLine(editor: vscode.TextEditor, text: string | undefined, regex: RegExp, defPos: number) {
     const found = this.findLine(editor, regex);
-    const line = found?.lineNumber ?? defPos;
 
-    // Fill out space if adding data
-    if (text && line >= editor.document.lineCount) {
-      const last = editor.document.lineAt(editor.document.lineCount - 1);
-      await editor.edit(e => e.insert(last.range.end, '\n'.repeat(line - editor.document.lineCount)));
-    }
-
-    const now = editor.document.lineAt(line);
-    const pos = new vscode.Position(line, 0);
-    const range = new vscode.Range(pos, new vscode.Position(line, now.text.length));
-
-    let op: Parameters<typeof editor['edit']>[0];
-
-    if (text === undefined) {
-      op = edit => edit.delete(range);
-    } else if (found) {
-      if (now.text === text) { // Same line
-        return; // Do not update if the same
+    if (text === undefined) { // Delete
+      if (found) {
+        await editor.edit(cmd => cmd.delete(found.rangeIncludingLineBreak));
       }
-      await editor.edit(e => e.replace(range, ''));
-      op = edit => edit.replace(pos, text);
-    } else {
-      await editor.edit(e => e.insert(pos, '\n'));
-      op = edit => edit.insert(pos, text);
+      return;
+    } else if (found) { // Replace
+      const now = editor.document.lineAt(found.lineNumber);
+      if (this.forCompare(now.text) !== this.forCompare(text)) { // If line changed
+        await editor.edit(e => e.replace(now.range, text));
+      }
+    } else { // Insert
+      await this.ensureLineAt(editor, defPos);
+      await editor.edit(e => e.insert(new vscode.Position(defPos, 0), `${text}\n`));
     }
-
-    return await editor.edit(op);
   }
 
   /**
