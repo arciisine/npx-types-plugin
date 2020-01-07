@@ -36,6 +36,32 @@ export class RunScriptUtil {
   }
 
   /**
+   * Output line
+   */
+  static append(chunk: string | Buffer) {
+    if (typeof chunk === 'string') {
+      this.channel.append(chunk);
+    } else {
+      this.channel.append(chunk.toString('utf8'));
+    }
+  }
+
+  /**
+   * Mark as done
+   */
+  static appendDone(code?: number) {
+    this.append(`\n[DONE] (exit code ${code})\n`);
+  }
+
+  static watchProc(op: 'on' | 'off') {
+    if (this.proc) {
+      this.proc[op]('close', this.appendDone);
+      this.proc.stdout![op]('data', this.append);
+      this.proc.stderr![op]('data', this.append);
+    }
+  }
+
+  /**
    * Launch process
    */
   static async launchProcess(editor: vscode.TextEditor) {
@@ -50,28 +76,7 @@ export class RunScriptUtil {
       cwd: vscode.workspace.workspaceFolders?.[0].uri.fsPath ?? process.cwd()
     });
 
-    // Close
-    this.proc.on('close', (code) => {
-      this.channel.appendLine(`\n[DONE] (exit code ${code})`);
-    });
-
-    // Running
-    this.proc.stdout!.on('data', (chunk: string | Buffer) => {
-      if (typeof chunk === 'string') {
-        this.channel.append(chunk);
-      } else {
-        this.channel.append(chunk.toString('utf8'));
-      }
-    });
-
-    // Running
-    this.proc.stderr!.on('data', (chunk: string | Buffer) => {
-      if (typeof chunk === 'string') {
-        this.channel.append(chunk);
-      } else {
-        this.channel.append(chunk.toString('utf8'));
-      }
-    });
+    this.watchProc('on');
   }
 
   /**
@@ -82,11 +87,14 @@ export class RunScriptUtil {
     if (!mod) return;
 
     if (this.proc) {
-      this.proc.kill('SIGKILL');
-      delete this.proc;
+      this.watchProc('off');
+      this.proc.kill('SIGKILL')
     }
 
     await this.prepareOutput(editor);
     await this.launchProcess(editor);
   }
 }
+
+RunScriptUtil.append = RunScriptUtil.append.bind(RunScriptUtil);
+RunScriptUtil.appendDone = RunScriptUtil.appendDone.bind(RunScriptUtil); 
