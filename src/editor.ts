@@ -5,11 +5,9 @@ import { TextUtil } from './text';
 
 export class EditorUtil {
 
-  static TAG_LINE = new RegExp(`^/[*][*][ ]*${ID}`);
-  static TAG_LINE_EXTRACT = new RegExp(`^/[*][*][ ]*${ID}[ ]*-[ ]*([^:]+)[ ]*[*]/`);
-  static TYPEDEF_SIMPLE = new RegExp(`@typedef.+import.*${ID_SAFE}`);
-  static TYPEDEF_EXTRACT = new RegExp(`^/[*][*][ ]*@typedef.*import[(]['"]([^'"]+)['"][ ]*${ID_SAFE}`);
-  static SHEBANG_EXTRACT = /^#!.*npx\s+((?:@|\w)\w*(?:[/]\w+)?(?:@\S+)?)/;
+  static TAG_LINE = new RegExp(`^/[*][ ]*${ID}[ ]*-[ ]*([^:]+)[ ]*[*]/`);
+  static TYPEDEF = new RegExp(`^/[*][*][ ]*@typedef.*import[(]['"]([^'"]+)['"].*${ID_SAFE}`);
+  static SHEBANG = /^#!.*npx\s+((?:@|\w)\w*(?:[/]\w+)?(?:@\S+)?)/;
 
   private static installCache = new Map<string, string | Error>();
 
@@ -24,32 +22,32 @@ export class EditorUtil {
    * Read path from npx loaded typings
    */
   static extractTypedefImportPath(editor: vscode.TextEditor) {
-    return TextUtil.extractMatch(editor, this.TYPEDEF_EXTRACT, 1);
+    return TextUtil.extractMatch(editor, this.TYPEDEF, 1);
   }
 
   /**
    * Read path from npx loaded typings
    */
   static extractInstallState(editor: vscode.TextEditor) {
-    return TextUtil.extractMatch(editor, this.TAG_LINE_EXTRACT, 1);
+    return TextUtil.extractMatch(editor, this.TAG_LINE, 1);
   }
 
   /**
    * Match on module name in shebang
    */
   static extractModuleFromShebang(editor: vscode.TextEditor): Mod | undefined {
-    const match = TextUtil.extractMatch(editor, this.SHEBANG_EXTRACT, 1);
+    const match = TextUtil.extractMatch(editor, this.SHEBANG, 1);
     return match ? new Mod(match) : undefined;
   }
 
   static updateTagLine(editor: vscode.TextEditor, line: string, after?: string) {
-    return TextUtil.updateLine(editor, `/** ${ID} - ${line} */${after ?? ''}`, this.TAG_LINE, 1);
+    return TextUtil.updateLine(editor, `/* ${ID} - ${line} */${after ?? ''}`, this.TAG_LINE, 1);
   }
 
   static updateTypedefLine(editor: vscode.TextEditor, loc?: string) {
     const [, id] = editor.document.fileName.split(vscode.workspace.workspaceFolders![0].uri.fsPath);
     const cleanId = id.replace(/([.]js$)|[\/-@]+/g, '_');
-    return TextUtil.updateLine(editor, loc && `/** @typedef {import('${loc}')} ${ID_SAFE}_${cleanId} */`, this.TYPEDEF_SIMPLE, 2);
+    return TextUtil.updateLine(editor, loc && `/** @typedef {import('${loc}')} ${ID_SAFE}_${cleanId} */`, this.TYPEDEF, 2);
   }
 
   /**
@@ -78,9 +76,9 @@ export class EditorUtil {
    * Remove typedef
    */
   static async removeTypedef(doc: vscode.TextDocument) {
-    if (this.SHEBANG_EXTRACT.test(doc.lineAt(0).text)) { // only with shebangs
+    if (this.SHEBANG.test(doc.lineAt(0).text)) { // only with shebangs
       await TextUtil.removeContent(doc, this.TAG_LINE);
-      await TextUtil.removeContent(doc, this.TYPEDEF_SIMPLE);
+      await TextUtil.removeContent(doc, this.TYPEDEF);
     }
   }
 

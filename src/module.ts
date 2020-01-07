@@ -2,12 +2,12 @@ import { promises as fs } from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 
-import { Mod, ID_SAFE } from './types';
+import { Mod, ID } from './types';
 import { Util } from './util';
 
 export class ModuleUtil {
 
-  static cacheDir = Util.mkdir(path.join(os.tmpdir(), `${ID_SAFE}`));
+  static cacheDir = Util.mkdir(path.join(os.tmpdir(), ID));
 
   /**
    * Verify that the found module matches the appropriate info

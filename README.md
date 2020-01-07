@@ -25,21 +25,21 @@ During editing, the plugin will download the library referenced in the shebang a
 **Begin Installation of Types**
 ```javascript
 #!/usr/bin/env -S npx @arcsine/nodesh
-/* @npx-scripts - installing ... */
+/* npx-scripts - installing ... */
 ```
 
 **Typings successfully referenced**
 ```javascript
 #!/usr/bin/env -S npx @arcsine/nodesh
-/* @npx-scripts - found */ // @ts-check
-/** @typedef {import('/tmp/npx-scripts/arcsine.nodesh')} npxscripts__simple_ */ 
+/* npx-scripts - found */ // @ts-check
+/** @typedef {import('/tmp/npx-scripts/arcsine.nodesh')} npx_scripts__simple_ */ 
 ```
 
 **Starting to Use new typings**
 ```javascript
 #!/usr/bin/env -S npx @arcsine/nodesh
-/* @npx-scripts - found*/ // @ts-check 
-/** @typedef {import('/tmp/npx-scripts/arcsine.nodesh')} npxscripts__simple_ */
+/* npx-scripts - found*/ // @ts-check 
+/** @typedef {import('/tmp/npx-scripts/arcsine.nodesh')} npx_scripts__simple_ */
 
 [1, 2, 3]
   .$collect(2)
@@ -59,6 +59,11 @@ Given the context of executable scripts, you can run the script manually without
 ![Running](https://github.com/arciisine/vscode-npx-scripts/raw/master/images/run.gif)
 
 ## Release Notes
+
+### 0.1.8
+* Fixed bugs with previous process writing to new output
+* Allow for more flexible detection of line equality, should work better with formatters
+* Separated out tag line from typedef for better support with formatters
 
 ### 0.1.7
 * Moved output from terminal to OutputChannel

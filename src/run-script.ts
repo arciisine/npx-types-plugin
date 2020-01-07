@@ -17,7 +17,7 @@ export class RunScriptUtil {
     const mod = EditorUtil.extractModuleFromShebang(editor)!;
 
     if (!this.channel) {
-      this.channel = vscode.window.createOutputChannel(ID);
+      this.channel = vscode.window.createOutputChannel(`@${ID}`);
     }
 
     this.channel.clear();

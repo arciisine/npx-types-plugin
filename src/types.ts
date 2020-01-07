@@ -17,5 +17,5 @@ export class Mod {
   }
 }
 
-export const ID = '@npx-scripts';
-export const ID_SAFE = ID.replace(/[^a-z]/g, '');
+export const ID = 'npx-scripts';
+export const ID_SAFE = 'npx_scripts';
