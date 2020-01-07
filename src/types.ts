@@ -1,3 +1,5 @@
+export const ID = 'npx-scripts';
+
 export class Mod {
   name: string;
   version?: string;
@@ -16,6 +18,3 @@ export class Mod {
     return this.full.replace(/[@/]/g, '.').replace(/(^[.]+)|([.]+$)/, '').replace(/[.][.]+/, '.');
   }
 }
-
-export const ID = 'npx-scripts';
-export const ID_SAFE = 'npx_scripts';

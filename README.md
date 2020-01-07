@@ -25,21 +25,21 @@ During editing, the plugin will download the library referenced in the shebang a
 **Begin Installation of Types**
 ```javascript
 #!/usr/bin/env -S npx @arcsine/nodesh
-/* npx-scripts - installing ... */
+/// @ts-check # npx-scripts - installing ...
 ```
 
 **Typings successfully referenced**
 ```javascript
 #!/usr/bin/env -S npx @arcsine/nodesh
-/* npx-scripts - found */ // @ts-check
-/** @typedef {import('/tmp/npx-scripts/arcsine.nodesh')} npx_scripts__simple_ */ 
+/// @ts-check # npx-scripts - found
+/// <reference types="/tmp/npx-scripts/arcsine.nodesh" /> # npx-scripts
 ```
 
 **Starting to Use new typings**
 ```javascript
 #!/usr/bin/env -S npx @arcsine/nodesh
-/* npx-scripts - found*/ // @ts-check 
-/** @typedef {import('/tmp/npx-scripts/arcsine.nodesh')} npx_scripts__simple_ */
+/// @ts-check # npx-scripts - found
+/// <reference types="/tmp/npx-scripts/arcsine.nodesh" /> # npx-scripts
 
 [1, 2, 3]
   .$collect(2)
@@ -51,7 +51,7 @@ During editing, the plugin will download the library referenced in the shebang a
 The extension will honor any module with a version specified `#!/usr/bin/env -S npx @arcsine/nodesh@1.1.5`.  Multiple versions can be installed side-by-side without issue and the extension will manage them appropriately.
 
 ### Portability
-If a file is loaded that happens to have a typedef, the plugin will check the path reference by the `@typedef`, and if it is not found on the machine it will update it, with a fresh install. When closing a document within vscode, the `@typedef` will be stripped out.
+If a file is loaded that happens to have an existing reference (`/// <reference />`), the plugin will check the path, and if it is not found it will be updated with a fresh install. When closing a document within vscode, the all inserted text will be stripped out.
 
 ## Running Scripts
 Given the context of executable scripts, you can run the script manually without problem. Additionally, the plugin provides the ability to execute the script with the loaded module, which will display in a vscode terminal.  One of the primary benefits here, is that npx will not be invoked, and so installation will be skipped.  This provides a speed boost across multiple executions.
@@ -59,6 +59,10 @@ Given the context of executable scripts, you can run the script manually without
 ![Running](https://github.com/arciisine/vscode-npx-scripts/raw/master/images/run.gif)
 
 ## Release Notes
+
+### 0.1.9
+* Resolved formatting issues when cleaning file on close
+* Changed preamble use triple slash, and work with formatters better
 
 ### 0.1.8
 * Fixed bugs with previous process writing to new output
