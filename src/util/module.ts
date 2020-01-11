@@ -2,19 +2,36 @@ import { promises as fs } from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 
-import { Mod, ID } from './types';
+import { Mod, ID, PackageJson } from '../types';
 import { Util } from './util';
+
+const log = Util.log.bind(null, 'MODULE');
+
+const getPackageJson: (name: string) => PackageJson =
+  require('get-package-json-from-registry');
+
 
 export class ModuleUtil {
 
   static cacheDir = Util.mkdir(path.join(os.tmpdir(), ID));
 
   /**
+   * Get package.json, typed
+   */
+  static getPackage(pth: string) {
+    try {
+      return require(`${pth}/package.json`) as PackageJson;
+    } catch {
+      return;
+    }
+  }
+
+  /**
    * Verify that the found module matches the appropriate info
    */
   static async verifyInfo(mod: Mod, pth: string) {
     try {
-      const pkg = require(`${pth}/package.json`);
+      const pkg = this.getPackage(pth)!;
       return mod.name === pkg.name && (!mod.version || mod.version === pkg.version);
     } catch {
       return false;
@@ -36,7 +53,9 @@ export class ModuleUtil {
       msg = lines[0];
     }
 
-    return new Error(msg);
+    const errOut = new Error(msg);
+    (errOut as any).installError = true;
+    return errOut;
   }
 
   /**
@@ -60,16 +79,26 @@ export class ModuleUtil {
 
     // Not there, now install
     const cmd = `npm i --no-save ${mod.full}`;
-    console.log('[INSTALL]', cmd);
+    log('Installing', cmd);
     try {
       await Util.exec(cmd, { cwd });
       await fs.rename(`${cwd}/node_modules/${mod.name}`, target);
       await fs.rename(`${cwd}/node_modules`, `${target}/node_modules`);
+      log(`${mod.full} successfully available at ${target}`);
     } catch (err) {
-      console.log('[FAILED]', err);
+      log(`${mod.full} failed to install`, err);
       throw this.cleanInstallError(mod, err);
     }
     return target;
+  }
+
+  static async findRoot(loc: string) {
+    while (loc && loc !== '/') {
+      loc = path.dirname(loc);
+      if (this.getPackage(loc)) {
+        return loc;
+      }
+    }
   }
 
   /**
@@ -77,17 +106,15 @@ export class ModuleUtil {
    */
   static async validateInstallation(mod: Mod, installedAt?: string) {
     try {
-      const key: 'name' | 'safe' = installedAt && installedAt.includes('node_modules') ? 'name' : 'safe';
       const fullPath = require.resolve(installedAt ?? mod.name); // Get location
-      const folder = `${fullPath.split(mod[key])[0]}${mod[key]}`;
+      const root = await this.findRoot(fullPath);
 
       if (
-        fullPath.includes(mod[key]) &&
-        await Util.exists(folder) &&
-        await this.verifyInfo(mod, folder)
+        root &&
+        await this.verifyInfo(mod, root)
       ) {
-        console.log('[FOUND]', `Previous valid install ${installedAt} exists`);
-        return folder;
+        log(`Valid installation found at ${installedAt}`);
+        return root;
       }
     } catch { }
   }
@@ -95,17 +122,28 @@ export class ModuleUtil {
   /**
    * Extracts shebang command to run, opting for local install for speed reasons
    */
-  static async getShebangCommand(shebang: string, typedefLoc?: string) {
+  static getShebangCommand(shebang: string, typedefLoc?: string) {
     if (typedefLoc) {
-      const pkgJson = `${typedefLoc}/package.json`;
-
-      if (await Util.exists(pkgJson)) {
-        const [bin] = [...Object.values(require(pkgJson).bin ?? {})] as string[];
+      const pkg = this.getPackage(typedefLoc);
+      if (pkg) {
+        const [bin] = [...Object.values(pkg.bin ?? {})];
         if (bin) {
           return path.resolve(typedefLoc, bin);
         }
       }
     }
-    return shebang.split(/#!/)[1]; // Strip prefix
+    return shebang.replace(/^#!/, ''); // Strip prefix
+  }
+
+  /**
+   * See if module has types
+   */
+  static async verifyModuleHasTypes(mod: Mod) {
+    try {
+      const res = await getPackageJson(mod.full);
+      return !!res.types || res.files?.find(x => x.endsWith('.d.ts'));
+    } catch {
+      return false;
+    }
   }
 }

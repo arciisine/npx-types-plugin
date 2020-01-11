@@ -26,37 +26,10 @@ export class Util {
   }
 
   /**
-   * Executes only latest invocation, with a required 1 seconds (default) of quiet
+   * Log functionality
    */
-  static debounce(fn: (...args: any[]) => Promise<any>, delay = 1000) {
-    let timer: NodeJS.Timeout;
-    let prom: ManualProm | undefined;
-    let running = false;
-
-    return async (...args: any[]) => {
-      if (prom === undefined) {
-        prom = this.manualProm();
-        running = false;
-      }
-
-      if (!running) { // If not already in motion
-        if (timer) { // Stop pending
-          clearTimeout(timer);
-        }
-
-        timer = setTimeout(() => { // Extend timeout
-          running = true;
-          fn(...args)
-            .then(prom!.resolve, prom!.reject)
-            .finally(() => {
-              prom = undefined;
-              running = false;
-            });
-        }, delay);
-      }
-
-      return prom!;
-    };
+  static log(area: string, message: string, ...args: any[]) {
+    console.log(new Date().toISOString(), `[${area}]`, message, ...args);
   }
 
   /**

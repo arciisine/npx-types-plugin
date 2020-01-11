@@ -2,7 +2,7 @@
   "name": "npx-scripts",
   "displayName": "npx scripts",
   "description": "General support for npx scripts, with typings via npx shebang and execution",
-  "version": "0.1.9",
+  "version": "1.0.0",
   "homepage": "https://github.com/arciisine/vscode-npx-scripts",
   "publisher": "arcsine",
   "keywords": [
@@ -24,7 +24,7 @@
   "categories": [
     "Other"
   ],
-  "main": "./out/extension",
+  "main": "./out/index",
   "scripts": {
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
@@ -39,18 +39,80 @@
     "onLanguage:javascript"
   ],
   "contributes": {
+    "snippets": [
+      {
+        "language": "javascript",
+        "path": "snippets.json"
+      }
+    ],
+    "menus": {
+      "editor/title": [
+        {
+          "command": "npx-scripts.run-script",
+          "group": "navigation",
+          "when": "npxScriptsModulePresent"
+        },
+        {
+          "command": "npx-scripts.run-script-with-input",
+          "group": "navigation",
+          "when": "npxScriptsModulePresent"
+        }
+      ]
+    },
+    "configuration": [
+      {
+        "properties": {
+          "npx-scripts.module-present": {
+            "default": false,
+            "type": "boolean"
+          }
+        }
+      }
+    ],
     "commands": [
       {
-        "title": "Run npx script",
-        "category": "npx",
-        "command": "npx-scripts.run",
-        "when": "editorLangId == javascript && !isInDiffEditor"
+        "title": "Add typings",
+        "category": "npx-scripts",
+        "command": "npx-scripts.add-typings",
+        "when": "npxScriptsModulePresent"
       },
       {
-        "title": "Re-install package",
-        "category": "npx",
-        "command": "npx-scripts.re-install",
-        "when": "editorLangId == javascript  && !isInDiffEditor"
+        "title": "Check Typings",
+        "category": "npx-scripts",
+        "command": "npx-scripts.check-typings",
+        "when": "npxScriptsModulePresent"
+      },
+      {
+        "title": "Remove typings",
+        "category": "npx-scripts",
+        "command": "npx-scripts.remove-typings",
+        "when": "npxScriptsModulePresent"
+      },
+      {
+        "icon": {
+          "dark": "images/play-dark.png",
+          "light": "images/play-light.png"
+        },
+        "title": "Run script",
+        "category": "npx-scripts",
+        "command": "npx-scripts.run-script",
+        "when": "npxScriptsModulePresent"
+      },
+      {
+        "icon": {
+          "dark": "images/play-input-dark.png",
+          "light": "images/play-input-light.png"
+        },
+        "title": "Run script with input",
+        "category": "npx-scripts",
+        "command": "npx-scripts.run-script-with-input",
+        "when": "npxScriptsModulePresent"
+      },
+      {
+        "title": "Re-install module",
+        "category": "npx-scripts",
+        "command": "npx-scripts.reinstall-module",
+        "when": "npxScriptsModulePresent"
       }
     ]
   },
@@ -62,5 +124,8 @@
   "galleryBanner": {
     "color": "#c6cdd3",
     "theme": "light"
+  },
+  "dependencies": {
+    "get-package-json-from-registry": "^2.2.2"
   }
 }

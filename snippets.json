@@ -1,0 +1,12 @@
+{
+  "Shebang": {
+    "prefix": [
+      "shebang",
+      "npx-shebang"
+    ],
+    "body": [
+      "#!/usr/bin/env -S npx $0"
+    ],
+    "description": "An npx shebang."
+  }
+}

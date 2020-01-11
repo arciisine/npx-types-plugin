@@ -6,28 +6,23 @@ export class TextUtil {
 
   private static mapping: Record<string, string> = { ' ': '\\s+', '_': '\\s*' };
 
-  static getDocument(docOrEd: vscode.TextEditor | vscode.TextDocument) {
-    return 'document' in docOrEd ? docOrEd.document : docOrEd;
-  }
-
   /**
    * Templatizes the regex
    */
   static templateRe(re: RegExp, tok: string) {
-    const out = new RegExp(re.source
-      .replace('$ID', tok)
-      .replace(/[ _]/g, a => this.mapping[a]),
-      'm');
-    console.log(out.toString());
+    const out = new RegExp(
+      re.source
+        .replace('$ID', tok)
+        .replace(/[ _]/g, a => this.mapping[a]),
+      'm'
+    );
     return out;
   }
 
   /**
    * Find first line with pattern
    */
-  static findLine(docOrEd: vscode.TextEditor | vscode.TextDocument, pat: RegExp) {
-    const doc = this.getDocument(docOrEd);
-
+  static findLine(doc: vscode.TextDocument, pat: RegExp) {
     for (let line = 0; line < doc.lineCount; line += 1) {
       if (pat.test(doc.lineAt(line).text)) {
         return doc.lineAt(line);
@@ -47,7 +42,7 @@ export class TextUtil {
    */
   static async updateLine(editor: vscode.TextEditor, text: string | undefined, regex: RegExp, defLine: number) {
     return await editor.edit(cmd => {
-      const found = this.findLine(editor, regex);
+      const found = this.findLine(editor.document, regex);
 
       if (text === undefined) { // Delete
         if (found) {
@@ -66,17 +61,14 @@ export class TextUtil {
         }
         cmd.insert(new vscode.Position(defLine, 0), `${text}\n`)
       }
-    }, {
-      undoStopAfter: false,
-      undoStopBefore: false
     });
   }
 
   /**
    * Return match by group number from regex
    */
-  static extractMatch(docOrEd: vscode.TextEditor | vscode.TextDocument, regex: RegExp, group: number = 1) {
-    const line = this.findLine(docOrEd, regex);
+  static extractMatch(doc: vscode.TextDocument, regex: RegExp, group: number = 1) {
+    const line = this.findLine(doc, regex);
     if (line === undefined) {
       return;
     }
@@ -90,40 +82,34 @@ export class TextUtil {
   }
 
   /**
-   * Append line to editor
-   * @param editor 
-   * @param lines 
-   */
-  static async append(editor: vscode.TextEditor, ...lines: string[]) {
-    await editor.edit((cmd) => {
-      const lastLine = editor.document.lineAt(editor.document.lineCount - 1);
-      cmd.insert(lastLine.range.end, `\n${lines.join('\n')}`);
-    });
-  }
-
-  /**
    * Remove content from file
    */
   static async removeLines(docOrEd: vscode.TextEditor | vscode.TextDocument, ...regexes: RegExp[]) {
-    const doc = this.getDocument(docOrEd);
-
-    if (await Util.exists(doc.fileName)) {
-      try {
-        const linesToExclude = new Set<number>();
-        for (const regex of regexes) {
-          const found = this.findLine(doc, regex);
-          if (found) {
-            linesToExclude.add(found.lineNumber);
+    if ('document' in docOrEd) {
+      for (const regex of regexes) {
+        await this.updateLine(docOrEd, undefined, regex, -1);
+      }
+      await docOrEd.document.save();
+    } else {
+      const doc = docOrEd;
+      if (await Util.exists(doc.fileName)) {
+        try {
+          const linesToExclude = new Set<number>();
+          for (const regex of regexes) {
+            const found = this.findLine(doc, regex);
+            if (found) {
+              linesToExclude.add(found.lineNumber);
+            }
           }
-        }
-        if (linesToExclude.size > 0) {
-          const content = doc.getText()
-            .split('\n')
-            .filter((el, i) => !linesToExclude.has(i))
-            .join('\n');
-          await fs.writeFile(doc.fileName, content, 'utf8');
-        }
-      } catch { }
+          if (linesToExclude.size > 0) {
+            const content = doc.getText()
+              .split('\n')
+              .filter((el, i) => !linesToExclude.has(i))
+              .join('\n');
+            await fs.writeFile(doc.fileName, content, 'utf8');
+          }
+        } catch { }
+      }
     }
   }
 }

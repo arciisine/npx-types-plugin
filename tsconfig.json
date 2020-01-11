@@ -5,6 +5,7 @@
     "target": "es2018",
     "strict": true,
     "strictPropertyInitialization": false,
+    "experimentalDecorators": true,
     "lib": [
       "es2015",
       "es2018"
