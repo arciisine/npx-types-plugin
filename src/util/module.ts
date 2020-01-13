@@ -18,9 +18,9 @@ export class ModuleUtil {
   /**
    * Get package.json, typed
    */
-  static getPackage(pth: string) {
+  static async getPackage(pth: string) {
     try {
-      return require(`${pth}/package.json`) as PackageJson;
+      return JSON.parse(await fs.readFile(`${pth}/package.json`, 'utf8')) as PackageJson;
     } catch {
       return;
     }
@@ -31,7 +31,7 @@ export class ModuleUtil {
    */
   static async verifyInfo(mod: Mod, pth: string) {
     try {
-      const pkg = this.getPackage(pth)!;
+      const pkg = (await this.getPackage(pth))!;
       return mod.name === pkg.name && (!mod.version || mod.version === pkg.version);
     } catch {
       return false;
@@ -134,7 +134,6 @@ export class ModuleUtil {
 
       if (
         root &&
-        await Util.exists(root) &&
         await this.verifyInfo(mod, root)
       ) {
         log(`Valid installation found at ${root}`);
@@ -146,9 +145,9 @@ export class ModuleUtil {
   /**
    * Extracts shebang command to run, opting for local install for speed reasons
    */
-  static getShebangCommand(shebang: string, typedefLoc?: string) {
+  static async getShebangCommand(shebang: string, typedefLoc?: string) {
     if (typedefLoc) {
-      const pkg = this.getPackage(typedefLoc);
+      const pkg = await this.getPackage(typedefLoc);
       if (pkg) {
         const [bin] = [...Object.values(pkg.bin ?? {})];
         if (bin) {

@@ -87,11 +87,11 @@ export class ScriptRunner {
   /**
    * Launch process
    */
-  static launchProcess(doc: vscode.TextDocument) {
+  static async launchProcess(doc: vscode.TextDocument) {
     const file = doc.fileName;
     const shebang = EditorUtil.getShebang(doc)!;
     const typedefLoc = EditorUtil.getTypingsPath(doc);
-    const cmd = ModuleUtil.getShebangCommand(shebang, typedefLoc);
+    const cmd = await ModuleUtil.getShebangCommand(shebang, typedefLoc);
 
     const [exe, ...args] = `${cmd} ${file}`.split(' ');
     log('Starting new process', cmd, file);
@@ -103,26 +103,24 @@ export class ScriptRunner {
 
     this.watchProc('on');
 
-    return (async () => {
-      await Util.sleep(1000);
+    await Util.sleep(1000);
 
-      if (!this.proc || this.proc.killed) {
-        return;
+    if (!this.proc || this.proc.killed) {
+      return;
+    }
+
+    // Wait for process to finish
+    return vscode.window.withProgress({
+      cancellable: true,
+      location: vscode.ProgressLocation.Notification,
+      title: `Running ${ID} ${file}`
+    }, async (_, token) => {
+      token.onCancellationRequested(this.killProc.bind(this));
+
+      while (!token.isCancellationRequested && !this.proc.killed && this.proc.stdout?.readable) {
+        await Util.sleep(100);
       }
-
-      // Wait for process to finish
-      await vscode.window.withProgress({
-        cancellable: true,
-        location: vscode.ProgressLocation.Notification,
-        title: `Running ${ID} ${file}`
-      }, async (_, token) => {
-        token.onCancellationRequested(this.killProc.bind(this));
-
-        while (!token.isCancellationRequested && !this.proc.killed && this.proc.stdout?.readable) {
-          await Util.sleep(100);
-        }
-      });
-    })();
+    });
   }
 
   /**
