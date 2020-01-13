@@ -60,7 +60,7 @@ Additionally, there is a command to `Run Script With Input`, which will prompt f
 
 ## Release Notes
 
-### 1.0.2
+### 1.0.3
 * Resolved issue with `require` caching modules
 
 ### 1.0.1

@@ -87,8 +87,8 @@ class Extension {
    */
   @ValidEditorCommand()
   static async reinstallTypings(editor: vscode.TextEditor) {
-    await EditorUtil.uninstallModule(editor);
     await EditorUtil.removeTypings(editor);
+    await EditorUtil.uninstallModule(editor);
     await this.addTypings(editor);
   }
 
@@ -122,8 +122,8 @@ class Extension {
    */
   @ValidEditorCommand()
   static async removeTypings(editor: vscode.TextEditor) {
-    await EditorUtil.removeTypings(editor);
     VSCodeUtil.markAsPrompted(editor.document);
+    await EditorUtil.removeTypings(editor);
     await editor.document.save();  // Trigger verify
   }
 

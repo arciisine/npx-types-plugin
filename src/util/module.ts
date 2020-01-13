@@ -20,8 +20,10 @@ export class ModuleUtil {
    */
   static async getPackage(pth: string) {
     try {
-      return JSON.parse(await fs.readFile(`${pth}/package.json`, 'utf8')) as PackageJson;
-    } catch {
+      const res = JSON.parse(await fs.readFile(`${pth}/package.json`, 'utf8')) as PackageJson;
+      return res;
+    } catch (err) {
+      console.log(err);
       return;
     }
   }
@@ -118,7 +120,7 @@ export class ModuleUtil {
   static async findRoot(loc: string) {
     while (loc && loc !== '/') {
       loc = path.dirname(loc);
-      if (this.getPackage(loc)) {
+      if (await this.getPackage(loc)) {
         return loc;
       }
     }
