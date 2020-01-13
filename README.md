@@ -17,12 +17,12 @@ This is a sister project of [`@arcsine/nodesh`](https://github.com/arciisine/nod
 ```javascript
 #!/usr/bin/env -S npx @arcsine/nodesh
 /// @ts-check
-/// <reference types="/tmp/npx-scripts/arcsine.nodesh"  lib="npx-scripts" />
+/// <reference types="/tmp/npx-scripts/arcsine.nodesh" lib="npx-scripts" />
 
-[1, 2, 3]
-  .$map(x => x * 3)
-  .$console
-
+'https://en.wikipedia.org/wiki/Special:Random'
+  .$http()
+  .$match(/\b[A-Z][a-z]+/, 'extract') // Read proper names
+  .$console;
 ```
 
 ## Shebang Snippet
@@ -31,9 +31,11 @@ When authoring a new script, the `shebang` snippet will help to provide a sheban
 
 ![Shebang](https://github.com/arciisine/vscode-npx-scripts/raw/master/images/shebang.gif)
 
+The `nodesh-shebang` will provide support for a `nodesh` declaration.
+
 ## Type Acquisition
 
-During the editing process, the plugin will attempt to assist with acquiring types.  If a file with an `npx` shebang is opened, or an `npx` shebang is added to a file, the plugin will check the referenced `npm` module with types, and if found, prompt to add.
+During the editing process, the plugin will attempt to assist with acquiring types.  If a file with an `npx` shebang is opened, or an `npx` shebang is added to a file, the plugin will check the referenced `npm` module.  If the module contains types, the user will be prompted to add a type reference to the script.
 
 ![Acquisition](https://github.com/arciisine/vscode-npx-scripts/raw/master/images/acquisition.gif)
 
@@ -54,7 +56,13 @@ Additionally, there is a command to `Run Script With Input`, which will prompt f
 
 ![Running](https://github.com/arciisine/vscode-npx-scripts/raw/master/images/run.gif)
 
+**NOTE**: To get colorized output from the script runner, consider installing the [Output Colorizer](https://marketplace.visualstudio.com/items?itemName=IBM.output-colorizer) extension.
+
 ## Release Notes
+
+### 1.0.1
+* Documentation update
+* Resolved issues with reinstallation
 
 ### 1.0.0
 * Change general flow of plugin, no long attempts to auto add typings

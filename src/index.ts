@@ -11,6 +11,7 @@ class Extension {
   /**
    * Verify typings
    */
+  @ValidEditorCommand()
   static async verifyTypings(editor: vscode.TextEditor) {
     const { document: doc } = editor;
     const result = await EditorUtil.verifyTypings(doc);
@@ -19,7 +20,7 @@ class Extension {
     switch (result) {
       case 'valid': {
         VSCodeUtil.setCodeLenses(doc,
-          { title: 'Reinstall npx typings', command: this.addTypings },
+          { title: 'Reinstall npx typings', command: this.reinstallTypings },
           { title: 'Remove npx typings', command: this.removeTypings }
         );
         break;
@@ -62,7 +63,7 @@ class Extension {
   /**
    * Run Script
    */
-  @ValidEditorCommand()
+  @ValidEditorCommand(false)
   static async runScript({ document }: vscode.TextEditor) {
     await ScriptRunner.run(document);
   }
@@ -70,7 +71,7 @@ class Extension {
   /**
    * Run Script with script
    */
-  @ValidEditorCommand()
+  @ValidEditorCommand(false)
   static async runScriptWithInput({ document }: vscode.TextEditor) {
     const [file] = await vscode.window.showOpenDialog({
       canSelectFiles: true,
@@ -85,10 +86,10 @@ class Extension {
    * Reinstall module
    */
   @ValidEditorCommand()
-  static async reinstallModule(editor: vscode.TextEditor) {
-    await EditorUtil.reinstallModule(editor);
-    await editor.document.save();
-    await this.verifyTypings(editor);
+  static async reinstallTypings(editor: vscode.TextEditor) {
+    await EditorUtil.uninstallModule(editor);
+    await EditorUtil.removeTypings(editor);
+    await this.addTypings(editor);
   }
 
   /**
@@ -96,15 +97,23 @@ class Extension {
    */
   @ValidEditorCommand()
   static async addTypings(editor: vscode.TextEditor) {
-    const res = await EditorUtil.addTypings(editor);
     const { document: doc } = editor;
+    const mod = EditorUtil.getModuleFromShebang(doc)!;
+
+    // Watch install
+    const res = await vscode.window.withProgress({
+      cancellable: false,
+      location: vscode.ProgressLocation.Notification,
+      title: `Installing ${mod.name}`
+    }, async (progress) => {
+      return await EditorUtil.addTypings(editor);
+    });
 
     if (res instanceof Error) {
-      const mod = EditorUtil.getModuleFromShebang(doc);
       await VSCodeUtil.promptAction(doc, 'error', `Unable to install typings for ${mod!.full}: ${res.message}`,
         { title: 'Dismiss', command: this.noop });
     } else {
-      await this.verifyTypings(editor);
+      await editor.document.save(); // Trigger verify
     }
   }
 
@@ -115,16 +124,7 @@ class Extension {
   static async removeTypings(editor: vscode.TextEditor) {
     await EditorUtil.removeTypings(editor);
     VSCodeUtil.markAsPrompted(editor.document);
-
-    await this.verifyTypings(editor);
-  }
-
-  /**
-   * Check typings in doc
-   */
-  @ValidEditorCommand()
-  static async checkTypings(editor: vscode.TextEditor) {
-    return await this.verifyTypings(editor);
+    await editor.document.save();  // Trigger verify
   }
 
   /**
@@ -133,15 +133,15 @@ class Extension {
   static activate(context: vscode.ExtensionContext) {
     // Track subscriptions
     context.subscriptions.push(
-      vscode.workspace.onDidSaveTextDocument(this.checkTypings as any),
-      vscode.workspace.onDidOpenTextDocument(this.checkTypings as any),
-      vscode.window.onDidChangeActiveTextEditor(this.checkTypings as any),
+      vscode.workspace.onDidSaveTextDocument(this.verifyTypings as any),
+      vscode.workspace.onDidOpenTextDocument(this.verifyTypings as any),
+      vscode.window.onDidChangeActiveTextEditor(this.verifyTypings as any),
     );
 
     VSCodeUtil.activate(context);
     ScriptRunner.activate(context);
     // All on load
-    setTimeout(this.checkTypings as any, 1000);
+    setTimeout(this.verifyTypings as any, 1000);
   }
 
   static async deactivate() { }

@@ -2,7 +2,7 @@
   "name": "npx-scripts",
   "displayName": "npx scripts",
   "description": "General support for npx scripts, with typings via npx shebang and execution",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "homepage": "https://github.com/arciisine/vscode-npx-scripts",
   "publisher": "arcsine",
   "keywords": [
@@ -59,16 +59,6 @@
         }
       ]
     },
-    "configuration": [
-      {
-        "properties": {
-          "npx-scripts.module-present": {
-            "default": false,
-            "type": "boolean"
-          }
-        }
-      }
-    ],
     "commands": [
       {
         "title": "Add typings",
@@ -77,9 +67,9 @@
         "when": "npxScriptsModulePresent"
       },
       {
-        "title": "Check Typings",
+        "title": "Verify Typings",
         "category": "npx-scripts",
-        "command": "npx-scripts.check-typings",
+        "command": "npx-scripts.verify-typings",
         "when": "npxScriptsModulePresent"
       },
       {
@@ -111,7 +101,7 @@
       {
         "title": "Re-install module",
         "category": "npx-scripts",
-        "command": "npx-scripts.reinstall-module",
+        "command": "npx-scripts.reinstall-typings",
         "when": "npxScriptsModulePresent"
       }
     ]

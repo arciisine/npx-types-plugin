@@ -4,7 +4,7 @@ import { Mod, ID, INSTALL_STATE, TYPINGS_STATE } from '../types';
 import { TextUtil } from './text';
 import { Util } from './util';
 
-const log = Util.log.bind(null, 'TYPINGS')
+const log = Util.log.bind(null, 'EDITOR')
 
 export class EditorUtil {
 
@@ -69,12 +69,12 @@ export class EditorUtil {
   /**
    * Install module
    */
-  static async installModule(editor: vscode.TextEditor, mod: Mod, force = false): Promise<INSTALL_STATE | Error> {
+  static async installModule(editor: vscode.TextEditor, mod: Mod): Promise<INSTALL_STATE | Error> {
     try {
       // Now installing
       await this.updateTypingsLine(editor, undefined);
 
-      const installed = await ModuleUtil.install(mod, force);
+      const installed = await ModuleUtil.install(mod);
       await this.setTsCheck(editor);
       await this.updateTypingsLine(editor, installed);
       await editor.document.save();
@@ -86,13 +86,13 @@ export class EditorUtil {
   }
 
   /**
-   * Re-download module
+   * Uninstall managed module
    */
-  static async reinstallModule(editor: vscode.TextEditor) {
+  static async uninstallModule(editor: vscode.TextEditor) {
     const mod = this.getModuleFromShebang(editor.document)!;
-    await this.installModule(editor, mod, true);
+    log('Uninstalling module', mod.name);
+    await ModuleUtil.uninstall(mod);
   }
-
 
   /**
    * Remove typings

@@ -8,5 +8,14 @@
       "#!/usr/bin/env -S npx $0"
     ],
     "description": "An npx shebang."
+  },
+  "Nodesh": {
+    "prefix": [
+      "nodesh-shebang"
+    ],
+    "body": [
+      "#!/usr/bin/env -S npx @arcsine/nodesh"
+    ],
+    "description": "A nodesh shebang."
   }
 }

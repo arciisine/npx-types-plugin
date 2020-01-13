@@ -15,8 +15,6 @@ export class ScriptRunner {
   static proc: cp.ChildProcess;
   static channel: vscode.OutputChannel;
 
-  static sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
-
   /**
    * Prepare output
    */
@@ -106,7 +104,7 @@ export class ScriptRunner {
     this.watchProc('on');
 
     return (async () => {
-      await this.sleep(1000);
+      await Util.sleep(1000);
 
       if (!this.proc || this.proc.killed) {
         return;
@@ -121,7 +119,7 @@ export class ScriptRunner {
         token.onCancellationRequested(this.killProc.bind(this));
 
         while (!token.isCancellationRequested && !this.proc.killed && this.proc.stdout?.readable) {
-          await this.sleep(100);
+          await Util.sleep(100);
         }
       });
     })();

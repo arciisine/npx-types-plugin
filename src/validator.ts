@@ -9,13 +9,13 @@ const log = Util.log.bind(null, 'VALIDATOR');
 /**
  * 
  */
-export function ValidEditorCommand(): MethodDecorator {
+export function ValidEditorCommand(debounce = true): MethodDecorator {
   return ((target: object, prop: string | symbol, desc: TypedPropertyDescriptor<(editor: vscode.TextEditor) => Promise<any>>) => {
     const og = desc.value!;
     let running: Promise<any> | undefined;
 
-    desc.value = async function (this: any, ed) {
-      if (running) {
+    desc.value = async function (this: any, ed, ...args: any[]) {
+      if (debounce && running) {
         return running;
       }
 
@@ -32,7 +32,7 @@ export function ValidEditorCommand(): MethodDecorator {
         if (mod) {
           try {
             log('Calling', og.name);
-            running = await og.call(target, ed);
+            running = await (og as any).call(target, ed, ...args);
             return running;
           } finally {
             running = undefined

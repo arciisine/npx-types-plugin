@@ -59,28 +59,47 @@ export class ModuleUtil {
   }
 
   /**
-   * Install dependency
+   * Uninstall module
    */
-  static async install(mod: Mod, force = false) {
-    const local = await this.validateInstallation(mod);
-    const target = local ?? path.join(await this.cacheDir, mod.safe);
+  static async uninstall(mod: Mod) {
+    const target = path.join(await this.cacheDir, mod.safe);
 
     // If target is already there
     if (await Util.exists(target)) {
-      // Force only works on extension managed install
-      if (force && target.startsWith(await this.cacheDir)) {
+      // Only works on extension managed install
+      if (target.startsWith(await this.cacheDir)) {
+        log('Removing module folder', target);
         await Util.rmdir(target); // Clear out on force
-      } else {
-        return target;
       }
+    } else {
+      log('Module not found', mod.name);
+    }
+  }
+
+  /**
+   * Install dependency
+   */
+  static async install(mod: Mod) {
+    // If on node path
+    const local = await this.validateInstallation(mod);
+    if (local) {
+      return local;
+    };
+
+    // If manually installed
+    const target = path.join(await this.cacheDir, mod.safe);
+    if (await this.validateInstallation(mod, target)) {
+      return target; // Return if valid and found
+    } else {
+      await this.uninstall(mod); // Cleanup if folder isn't valid
     }
 
     const cwd = await fs.mkdtemp(path.join(os.tmpdir(), 'z-'));
 
-    // Not there, now install
-    const cmd = `npm i --no-save ${mod.full}`;
-    log('Installing', cmd);
+    // Now install
     try {
+      const cmd = `npm i --no-save ${mod.full}`;
+      log('Installing', cmd);
       await Util.exec(cmd, { cwd });
       await fs.rename(`${cwd}/node_modules/${mod.name}`, target);
       await fs.rename(`${cwd}/node_modules`, `${target}/node_modules`);
@@ -88,7 +107,11 @@ export class ModuleUtil {
     } catch (err) {
       log(`${mod.full} failed to install`, err);
       throw this.cleanInstallError(mod, err);
+    } finally {
+      // Cleanup temp dir
+      await Util.rmdir(cwd);
     }
+
     return target;
   }
 
@@ -111,9 +134,10 @@ export class ModuleUtil {
 
       if (
         root &&
+        await Util.exists(root) &&
         await this.verifyInfo(mod, root)
       ) {
-        log(`Valid installation found at ${installedAt}`);
+        log(`Valid installation found at ${root}`);
         return root;
       }
     } catch { }

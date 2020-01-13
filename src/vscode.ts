@@ -31,19 +31,18 @@ export class VSCodeUtil {
     message: string, ...actions: ExtCommand[]
   ) {
     const { fileName } = document;
-    if (this.prompted.has(fileName)) {
+    if (level === 'info' && this.prompted.has(fileName)) {
       return;
     }
     this.markAsPrompted(document);
 
     const inst = this.messaging[level](message, ...actions.map(x => x.title));
 
-    await inst.then(async res => {
-      const cmd = actions.find(x => x.title === res);
-      if (cmd) {
-        await vscode.commands.executeCommand(this.functionToCommand(cmd.command.name))
-      }
-    });
+    const res = await inst;
+    const cmd = actions.find(x => x.title === res);
+    if (cmd) {
+      await vscode.commands.executeCommand(this.functionToCommand(cmd.command.name))
+    }
   }
 
   /**
