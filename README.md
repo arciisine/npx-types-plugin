@@ -1,6 +1,6 @@
 <h1>
   <sub><img src="https://github.com/arciisine/vscode-npx-scripts/raw/master/images/logo.png" height="40"></sub>
-  npx scripts VSCode Plugin
+  npx-scripts VSCode Plugin
 </h1>
 
 The [`plugin`](https://marketplace.visualstudio.com/items?itemName=arcsine.npx-scripts) provides general support for authoring `npx` scripts (`javascript` files that include `npx` in the `shebang` (e.g. `#!/usr/bin/env -S npx {module}`). The support includes:
@@ -59,6 +59,9 @@ Additionally, there is a command to `Run Script With Input`, which will prompt f
 **NOTE**: To get colorized output from the script runner, consider installing the [Output Colorizer](https://marketplace.visualstudio.com/items?itemName=IBM.output-colorizer) extension.
 
 ## Release Notes
+
+### 1.0.4
+* Standardized naming on `npx-scripts`
 
 ### 1.0.3
 * Resolved issue with `require` caching modules
