@@ -21,7 +21,7 @@ This is a sister project of [`@arcsine/nodesh`](https://github.com/arciisine/nod
 
 'https://en.wikipedia.org/wiki/Special:Random'
   .$http()
-  .$match(/\b[A-Z][a-z]+/, 'extract') // Read proper names
+  .$tokens(/\b[A-Z][a-z]+\b/) // Read proper names
   .$console;
 ```
 
