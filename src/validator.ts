@@ -3,6 +3,7 @@ import * as vscode from 'vscode';
 import { VSCodeUtil } from './vscode';
 import { EditorUtil } from './util/editor';
 import { Util } from './util/util';
+import { IDC } from './types';
 
 const log = Util.log.bind(null, 'VALIDATOR');
 
@@ -27,7 +28,7 @@ export function ValidEditorCommand(debounce = true): MethodDecorator {
         const mod = EditorUtil.getModuleFromShebang(doc);
 
         // Track to see if module is present
-        await vscode.commands.executeCommand('setContext', 'npxScriptsModulePresent', !!mod);
+        await vscode.commands.executeCommand('setContext', `${IDC}ModulePresent`, !!mod);
 
         if (mod) {
           try {

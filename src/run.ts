@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import * as cp from 'child_process';
 import * as fs from 'fs';
 
-import { ID } from './types';
+import { ID, IDC } from './types';
 import { EditorUtil } from './util/editor';
 import { ModuleUtil } from './util/module';
 import { VSCodeUtil } from './vscode';
@@ -94,6 +94,7 @@ export class ScriptRunner {
     const file = doc.fileName;
     const shebang = EditorUtil.getShebang(doc)!;
     const typedefLoc = EditorUtil.getTypingsPath(doc);
+    const mod = EditorUtil.getModuleFromShebang(doc)!;
     const cmd = await ModuleUtil.getShebangCommand(shebang, typedefLoc);
 
     const [exe, ...args] = `${cmd} ${file}`.split(' ');
@@ -112,18 +113,25 @@ export class ScriptRunner {
       return;
     }
 
-    // Wait for process to finish
-    return vscode.window.withProgress({
-      cancellable: true,
-      location: vscode.ProgressLocation.Notification,
-      title: `Running ${ID} ${file}`
-    }, async (_, token) => {
-      token.onCancellationRequested(this.killProc.bind(this));
+    const text = `Running ${ID} ${VSCodeUtil.resolveToRelativePath(file)} via ${mod.full}`;
 
-      while (!token.isCancellationRequested && !this.proc.killed && this.proc.stdout?.readable) {
+    const msg = vscode.window.withProgress({
+      title: text,
+      cancellable: false,
+      location: vscode.ProgressLocation.Window
+    }, async () => {
+      while (!this.proc.killed && this.proc.stdout?.readable) {
         await Util.sleep(100);
       }
     });
+
+    // Wait for process to finish
+    try {
+      await vscode.commands.executeCommand('setContext', `${IDC}Running`, true);
+      await msg;
+    } finally {
+      await vscode.commands.executeCommand('setContext', `${IDC}Running`, false);
+    }
   }
 
   /**
@@ -148,5 +156,6 @@ export class ScriptRunner {
     this.killProc = this.killProc.bind(this);
     this.append = this.append.bind(this);
     this.appendDone = this.appendDone.bind(this);
+    vscode.commands.registerCommand(`${ID}.kill-script`, () => this.killProc(-1));
   }
 }

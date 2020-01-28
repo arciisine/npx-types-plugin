@@ -60,6 +60,9 @@ Additionally, there is a command to `Run Script With Input`, which will prompt f
 
 ## Release Notes
 
+### 1.0.7
+* Change to how we indicate scripts are running, no longer blocking output with progress indicator.
+
 ### 1.0.6
 * Minor tweak to output channel management for running scripts
 

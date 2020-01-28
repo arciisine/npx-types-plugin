@@ -2,7 +2,7 @@
   "name": "npx-scripts",
   "displayName": "npx-scripts",
   "description": "General support for npx scripts, with typings via npx shebang and execution",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "homepage": "https://github.com/arciisine/vscode-npx-scripts",
   "publisher": "arcsine",
   "keywords": [
@@ -50,12 +50,17 @@
         {
           "command": "npx-scripts.run-script",
           "group": "navigation",
-          "when": "npxScriptsModulePresent"
+          "when": "npxScriptsModulePresent && !npxScriptsRunning"
         },
         {
           "command": "npx-scripts.run-script-with-input",
           "group": "navigation",
-          "when": "npxScriptsModulePresent"
+          "when": "npxScriptsModulePresent && !npxScriptsRunning"
+        },
+        {
+          "command": "npx-scripts.kill-script",
+          "group": "navigation",
+          "when": "npxScriptsModulePresent && npxScriptsRunning"
         }
       ]
     },
@@ -83,7 +88,7 @@
           "dark": "images/play-dark.png",
           "light": "images/play-light.png"
         },
-        "title": "Run script",
+        "title": "Script Run",
         "category": "npx-scripts",
         "command": "npx-scripts.run-script",
         "when": "npxScriptsModulePresent"
@@ -93,9 +98,19 @@
           "dark": "images/play-input-dark.png",
           "light": "images/play-input-light.png"
         },
-        "title": "Run script with input",
+        "title": "Script Run with input",
         "category": "npx-scripts",
         "command": "npx-scripts.run-script-with-input",
+        "when": "npxScriptsModulePresent"
+      },
+      {
+        "icon": {
+          "dark": "images/stop-dark.png",
+          "light": "images/stop-light.png"
+        },
+        "title": "Script Kill",
+        "category": "npx-scripts",
+        "command": "npx-scripts.kill-script",
         "when": "npxScriptsModulePresent"
       },
       {

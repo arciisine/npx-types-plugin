@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 
 export const ID = 'npx-scripts';
+export const IDC = 'npxScripts';
 
 export class Mod {
   name: string;
