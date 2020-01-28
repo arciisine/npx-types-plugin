@@ -60,6 +60,9 @@ Additionally, there is a command to `Run Script With Input`, which will prompt f
 
 ## Release Notes
 
+### 1.0.6
+* Minor tweak to output channel management for running scripts
+
 ### 1.0.5
 * Updating logo
 

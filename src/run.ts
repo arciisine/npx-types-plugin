@@ -21,11 +21,14 @@ export class ScriptRunner {
   static prepareOutput(doc: vscode.TextDocument, args: (string | undefined)[] = []) {
     const mod = EditorUtil.getModuleFromShebang(doc)!;
 
-    if (!this.channel) {
-      this.channel = vscode.window.createOutputChannel(`@${ID}`);
+    // Reset channel
+    if (this.channel) {
+      this.channel.dispose();
+      this.channel.hide();
+      delete this.channel;
     }
 
-    this.channel.clear();
+    this.channel = vscode.window.createOutputChannel(`@${ID}`);
 
     const { fileName } = doc;
     const relativeFile = VSCodeUtil.resolveToRelativePath(fileName);
